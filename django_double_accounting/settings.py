@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "taggit",
     "taggit_helpers",
     "graphene_django",
+    "blackbook.apps.BlackbookConfig",
 ]
 
 if DEBUG:
