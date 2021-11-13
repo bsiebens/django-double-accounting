@@ -1,0 +1,21 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+black = "*"
+coverage = "*"
+
+[packages]
+django = "*"
+django-mptt = "*"
+graphene-django = "*"
+django-taggit = "*"
+django-taggit-helpers = "*"
+
+[requires]
+python_version = "3.9"
+
+[pipenv]
+allow_prereleases = true
