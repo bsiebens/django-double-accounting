@@ -13,8 +13,13 @@ class CurrencyTest(TestCase):
 
         self.assertEqual(str(currency), "TEST")
 
+    def testCreationWithLowerCaseString(self):
+        currency = Currency.objects.create(name="Test Currency", code="test")
 
-class CurrencyConversionTest(models.Model):
+        self.assertEqual(str(currency), "TEST")
+
+
+class CurrencyConversionTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.EUR = Currency.objects.create(code="EUR")
