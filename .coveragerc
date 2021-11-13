@@ -1,0 +1,5 @@
+[run]
+omit = 
+    */migrations/*
+    django_blackbook/*
+    manage.py
