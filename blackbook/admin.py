@@ -1,3 +1,20 @@
 from django.contrib import admin
 
-# Register your models here.
+from . import models
+
+
+class CurrencyConversionsInline(admin.TabularInline):
+    model = models.CurrencyConversion
+    extra = 0
+    fields = ["multiplier", "target_currency", "timestamp"]
+    fk_name = "base_currency"
+
+
+@admin.register(models.Currency)
+class CurrencyAdmin(admin.ModelAdmin):
+    list_display = ["code", "name"]
+    search_fields = ["code", "name"]
+    inlines = [CurrencyConversionsInline]
+    fieldsets = [
+        ["General information", {"fields": ["code", "name"]}],
+    ]
