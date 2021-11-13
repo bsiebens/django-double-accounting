@@ -8,6 +8,7 @@ from decimal import Decimal
 class Currency(models.Model):
     code = models.CharField(max_length=10)
     name = models.CharField(max_length=250)
+    default_currency = models.BooleanField(default=False)
 
     class Meta:
         ordering = ["code"]
