@@ -1,8 +1,8 @@
-from graphene_django.forms.mutation import DjangoModelFormMutation
+from graphene_django.forms.mutation import DjangoFormMutation, DjangoModelFormMutation
 
 from . import types
 from .. import models
-from ..forms.currency import CurrencyConversionForm, CurrencyForm
+from ..forms import CurrencyConversionForm, CurrencyForm, ProfileForm
 
 import graphene
 
@@ -50,3 +50,24 @@ class DeleteCurrencyConversion(graphene.Mutation):
         obj.delete()
 
         return cls(ok=True)
+
+
+class UpdateProfileMutation(DjangoFormMutation):
+    user = graphene.Field(types.UserType)
+
+    class Meta:
+        form_class = ProfileForm
+
+    def perform_mutate(form, info):
+        user = info.context.user
+        if user.is_anonymous:
+            raise Exception("Not logged in")
+
+        user.first_name = form.cleaned_data["first_name"]
+        user.last_name = form.cleaned_data["last_name"]
+        user.save()
+
+        user.userprofile.default_currency = form.cleaned_data["default_currency"]
+        user.userprofile.save()
+
+        return UpdateProfileMutation(user=user)

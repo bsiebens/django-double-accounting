@@ -1,3 +1,5 @@
+from django.contrib.auth import get_user_model
+
 from graphene_django import DjangoObjectType
 
 from .. import models
@@ -20,3 +22,13 @@ class CurrencyConversionType(DjangoObjectType):
 class AmountType(graphene.ObjectType):
     amount = graphene.Decimal()
     currency = graphene.Field(CurrencyType)
+
+
+class UserType(DjangoObjectType):
+    default_currency = graphene.Field(CurrencyType, description="default currency")
+
+    class Meta:
+        model = get_user_model()
+
+    def resolve_default_currency(self, info):
+        return self.userprofile.default_currency
