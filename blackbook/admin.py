@@ -19,3 +19,20 @@ class CurrencyAdmin(admin.ModelAdmin):
     fieldsets = [
         ["General information", {"fields": ["code", "name"]}],
     ]
+
+
+@admin.register(models.UserProfile)
+class UserProfileAdmin(admin.ModelAdmin):
+    def get_full_name(self, obj):
+        return obj.user.get_full_name()
+
+    get_full_name.short_description = "Name"
+
+    list_display = ["id", "get_full_name", "user", "default_currency"]
+    list_display_links = ["get_full_name"]
+    ordering = ["user"]
+    search_fields = ["user__first_name", "user__last_name", "user__username"]
+    raw_id_fields = ["user", "default_currency"]
+    list_filter = ["default_currency"]
+    fieldsets = [["General information", {"fields": ["user", "default_currency", "created", "modified"]}]]
+    readonly_fields = ["created", "modified"]

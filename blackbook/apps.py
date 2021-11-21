@@ -2,5 +2,8 @@ from django.apps import AppConfig
 
 
 class BlackbookConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
-    name = 'blackbook'
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "blackbook"
+
+    def ready(self):
+        import blackbook.signals
