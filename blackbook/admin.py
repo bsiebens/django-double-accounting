@@ -12,7 +12,8 @@ class CurrencyConversionsInline(admin.TabularInline):
 
 @admin.register(models.Currency)
 class CurrencyAdmin(admin.ModelAdmin):
-    list_display = ["code", "name"]
+    list_display = ["id", "code", "name"]
+    list_display_links = ["code"]
     search_fields = ["code", "name"]
     inlines = [CurrencyConversionsInline]
     fieldsets = [
