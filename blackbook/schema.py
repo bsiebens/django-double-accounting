@@ -8,7 +8,7 @@ class Mutation(graphene.ObjectType):
     currency = mutations.CurrencyFormMutation.Field()
     currency_conversion = mutations.CurrencyConversionFormMutation.Field()
 
-    update_profile = mutations.UpdateProfileMutation.Field()
+    update_profile = mutations.ProfileFormMutation.Field()
 
     delete_currency = mutations.DeleteCurrency.Field()
     delete_currency_conversion = mutations.DeleteCurrencyConversion.Field()
