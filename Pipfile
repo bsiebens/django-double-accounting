@@ -14,6 +14,7 @@ django-mptt = "*"
 graphene-django = "*"
 django-taggit = "*"
 django-taggit-helpers = "*"
+django-localflavor = "*"
 
 [requires]
 python_version = "3.9"
