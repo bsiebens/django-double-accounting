@@ -74,3 +74,27 @@ class Account(MPTTModel):
         self.icon = type_to_icon[self.type]
 
         super(Account, self).save(*args, **kwargs)
+
+    @classmethod
+    def get_or_create(cls, account_string, return_last=True):
+        account_tree = account_string.split(":")
+        accounts = []
+        parent_account = None
+        account_type = None
+
+        for index, account_name in enumerate(account_tree):
+            if index == 0:
+                # If index == 0, we don't create an account but verify if it matches any of the account types.
+                if account_name.lower() not in cls.AccountType.values:
+                    raise ValidationError("Incorrect account type set as first value.")
+
+                account_type = account_name.lower()
+
+            else:
+                account, created = cls.objects.get_or_create(name=account_name, parent=parent_account, type=account_type)
+                accounts.append((account, created))
+                parent_account = account
+
+        if return_last:
+            return accounts[-1][0]
+        return accounts

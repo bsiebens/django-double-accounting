@@ -17,6 +17,7 @@ class Mutation(graphene.ObjectType):
 class Query(graphene.ObjectType):
     currencies = graphene.List(types.CurrencyType)
     currency_conversions = graphene.List(types.CurrencyConversionType)
+    convert = graphene.Field(types.AmountType, amount=graphene.Decimal(), currency=graphene.String())
     profile = graphene.Field(types.UserType)
 
     def resolve_currencies(self, info):
@@ -31,6 +32,11 @@ class Query(graphene.ObjectType):
             raise Exception("Not logged in!")
 
         return user
+
+    def resolve_convert(self, info, amount, currency):
+        currency = models.Currency.objects.get(code=currency)
+
+        return types.AmountType(amount=amount, currency=currency)
 
 
 schema = graphene.Schema(query=Query, mutation=Mutation)
