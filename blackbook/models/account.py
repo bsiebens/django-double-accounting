@@ -1,5 +1,8 @@
 from django.db import models
+from django.db.models import Sum
+from django.db.models.functions import Coalesce
 from django.utils import timezone
+from django.utils.functional import cached_property
 from django.core.exceptions import ValidationError
 
 from localflavor.generic.models import IBANField
@@ -7,7 +10,7 @@ from mptt.models import MPTTModel, TreeForeignKey
 from decimal import Decimal
 
 from .currency import Currency
-from .base import get_default_currency
+from ..utilities import unique_slugify
 
 import uuid
 
@@ -36,8 +39,9 @@ class Account(MPTTModel):
         help_text="Optional, in case currencies are selected, the account will be restricted to accepting transactions only in this currency.",
     )
     type = models.CharField(max_length=50, choices=AccountType.choices)
-    icon = models.CharField(max_length=50)
+    icon = models.CharField(max_length=50, null=True, blank=True)
     iban = IBANField("IBAN", null=True, blank=True)
+    accountstring = models.CharField("Account", max_length=250, blank=True, null=True)
 
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
@@ -48,6 +52,10 @@ class Account(MPTTModel):
     class Meta:
         ordering = ["name"]
         constraints = [models.UniqueConstraint(fields=["parent", "name"], name="unique_account_name_for_parent")]
+
+    @cached_property
+    def balance(self):
+        return self.balance_until_date()
 
     def __str__(self):
         return self.name
@@ -70,10 +78,27 @@ class Account(MPTTModel):
 
         self.clean()
 
-        # unique_slugify(self, self.name)
+        unique_slugify(self, self.name)
         self.icon = type_to_icon[self.type]
+        self.accountstring = ":".join([account["name"] for account in self.get_ancestors(include_self=True).values("name")])
 
         super(Account, self).save(*args, **kwargs)
+
+    def balance_until_date(self, date=timezone.localdate()):
+        from .transaction import Transaction
+
+        transactions = (
+            Transaction.objects.filter(journal_entry__date__lte=date)
+            .filter(account__in=self.get_descendants(include_self=True))
+            .values("currency__code")
+            .order_by("currency__code")
+            .annotate(amount=Coalesce(Sum("amount"), Decimal(0)))
+        )
+
+        if len(transactions) != 0:
+            return [(currency["amount"], currency["currency__code"]) for currency in transactions]
+
+        return [(0, currency.code) for currency in self.currencies.all()]
 
     @classmethod
     def get_or_create(cls, account_string, return_last=True):
