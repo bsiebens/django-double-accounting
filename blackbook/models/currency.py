@@ -7,7 +7,7 @@ from decimal import Decimal
 
 class Currency(models.Model):
     code = models.CharField(max_length=10, unique=True)
-    name = models.CharField(max_length=250)
+    name = models.CharField(max_length=250, blank=True, null=True)
     default_currency = models.BooleanField(default=False)
 
     class Meta:
