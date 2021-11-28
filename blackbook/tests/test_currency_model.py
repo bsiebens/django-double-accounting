@@ -22,9 +22,9 @@ class CurrencyTest(TestCase):
 class CurrencyConversionTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.EUR = Currency.objects.create(code="EUR")
-        cls.CHF = Currency.objects.create(code="CHF")
-        cls.USD = Currency.objects.create(code="USD")
+        cls.EUR, created = Currency.objects.get_or_create(code="EUR")
+        cls.CHF, created = Currency.objects.get_or_create(code="CHF")
+        cls.USD, created = Currency.objects.get_or_create(code="USD")
 
         cls.timestamp = timezone.now()
         cls.EUR_TO_CHF = CurrencyConversion.objects.create(base_currency=cls.EUR, target_currency=cls.CHF, multiplier=2, timestamp=cls.timestamp)

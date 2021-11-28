@@ -3,6 +3,8 @@ from django.db import models
 from django.db.models import base
 from django.utils import timezone
 
+from taggit.managers import TaggableManager
+
 from .account import Account
 from .currency import Currency, CurrencyConversion
 from .base import get_default_currency
@@ -17,6 +19,7 @@ class TransactionJournal(models.Model):
     short_description = models.CharField(max_length=250)
     description = models.TextField(blank=True, null=True)
     uuid = models.UUIDField("UUID", default=uuid.uuid4, editable=False, db_index=True, unique=True)
+    tags = TaggableManager()
 
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
@@ -37,8 +40,13 @@ class TransactionJournal(models.Model):
             if type(transaction["currency"]) == str and transaction["currency"] != "" and transaction["currency"] is not None:
                 transaction["currency"], created = Currency.objects.get_or_create(code=transaction["currency"])
 
-            if type(transaction["account_currency"]) == str and transaction["account_currency"] != "" and transaction["account_currency"] is not None:
-                transaction["account_currency"], created = Currency.objects.get_or_create(code=transaction["account_currency"])
+            if "account_currency" in transaction.keys():
+                if (
+                    type(transaction["account_currency"]) == str
+                    and transaction["account_currency"] != ""
+                    and transaction["account_currency"] is not None
+                ):
+                    transaction["account_currency"], created = Currency.objects.get_or_create(code=transaction["account_currency"])
 
             if type(transaction["account"]) == str:
                 # Replace the string with : format into the right account name (or create as needed)
@@ -114,9 +122,18 @@ class TransactionJournal(models.Model):
 
         return transaction_entries
 
+    @classmethod
+    def create(cls, short_description, transactions, date=timezone.localdate(), description=None, payee=None, user=None):
+        journal_entry = cls.objects.create(short_description=short_description, date=date, description=description, payee=payee)
+
+        transaction_entries = journal_entry._create_transactions(transactions=transactions, user=user)
+        Transaction.objects.bulk_create(transaction_entries)
+
+        return journal_entry
+
 
 class Transaction(models.Model):
-    journal_entry = models.ForeignKey(TransactionJournal, on_delete=models.CASCADE, related_name="transaction_legs")
+    journal_entry = models.ForeignKey(TransactionJournal, on_delete=models.CASCADE, related_name="transactions")
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="transactions")
     amount = models.DecimalField(max_digits=20, decimal_places=5)
     currency = models.ForeignKey(Currency, null=True, on_delete=models.SET_NULL)

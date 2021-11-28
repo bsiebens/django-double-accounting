@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 
 from mptt.admin import MPTTModelAdmin
+from taggit_helpers.admin import TaggitListFilter
 
 from .utilities import format_iban
 
@@ -69,7 +70,6 @@ class AccountAdmin(MPTTModelAdmin):
 
     list_display = [
         "name",
-        "slug",
         "type",
         "display_iban",
         "list_currencies",
@@ -89,3 +89,28 @@ class AccountAdmin(MPTTModelAdmin):
     ]
     readonly_fields = ["slug", "icon", "uuid", "accountstring"]
     filter_horizontal = ["currencies"]
+
+
+class TransactionInline(admin.TabularInline):
+    model = models.Transaction
+    extra = 0
+    fields = ["account", "amount", "currency"]
+
+
+@admin.register(models.TransactionJournal)
+class TransactionJournalAdmin(admin.ModelAdmin):
+    def show_tags(self, obj):
+        return " ".join(["#{tag}".format(tag=tag) for tag in obj.tags.all()])
+
+    show_tags.short_description = "Tags"
+
+    list_display = ["short_description", "payee", "date", "show_tags", "uuid", "created", "modified"]
+    list_filter = ["payee", TaggitListFilter]
+    date_hierarchy = "date"
+    search_fields = ["payee", "short_description", "description", "uuid"]
+    fieldsets = [
+        ["General information", {"fields": ["short_description", "payee", "date", "description", "tags"]}],
+        ["Options", {"fields": ["uuid"]}],
+    ]
+    readonly_fields = ["uuid"]
+    inlines = [TransactionInline]

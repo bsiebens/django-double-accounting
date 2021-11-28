@@ -80,9 +80,15 @@ class Account(MPTTModel):
 
         unique_slugify(self, self.name)
         self.icon = type_to_icon[self.type]
-        self.accountstring = ":".join([account["name"] for account in self.get_ancestors(include_self=True).values("name")])
 
         super(Account, self).save(*args, **kwargs)
+
+        # After saving we need to update the accountstring and save again
+        self.accountstring = "{type}:{accountstring}".format(
+            type=self.get_type_display(),
+            accountstring=":".join([account["name"] for account in self.get_ancestors(include_self=True).values("name")]),
+        )
+        super(Account, self).save()
 
     def balance_until_date(self, date=timezone.localdate()):
         from .transaction import Transaction
