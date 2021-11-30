@@ -1,6 +1,45 @@
 from django.template.defaultfilters import slugify
+from django.contrib import messages
+from django.shortcuts import redirect
+from django.utils.html import format_html
 
 import re
+
+
+def set_message(request, message, title=None):
+    message_flag = {
+        "s": messages.SUCCESS,
+        "f": messages.ERROR,
+        "w": messages.WARNING,
+        "i": messages.INFO,
+    }
+
+    message_class = {
+        "s": "is-success",
+        "f": "is-danger",
+        "w": "is-warning",
+        "i": "is-info",
+    }
+
+    if title is not None:
+        message_text = format_html(
+            '<article class="message {messageclass}"><div class="message-header">{messagetitle}</div><div class="message-body">{messagetext}</div></article>'.format(
+                messageclass=message_class[message[0:1]], messagetext=message[2:], messagetitle=title
+            )
+        )
+    else:
+        message_text = format_html(
+            '<article class="message {messageclass}"><div class="message-body">{messagetext}</div></article>'.format(
+                messageclass=message_class[message[0:1]], messagetext=message[2:]
+            )
+        )
+    messages.add_message(request, message_flag[message[0:1]], message_text, fail_silently=True)
+
+
+def set_message_and_redirect(request, message, url, title=None):
+    set_message(request, message, title)
+
+    return redirect(url)
 
 
 def format_iban(value, grouping=4):

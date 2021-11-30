@@ -11,7 +11,6 @@ django-debug-toolbar = "*"
 [packages]
 django = "*"
 django-mptt = "*"
-graphene-django = "*"
 django-taggit = "*"
 django-taggit-helpers = "*"
 django-localflavor = "*"

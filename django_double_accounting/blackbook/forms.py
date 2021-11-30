@@ -24,4 +24,4 @@ class ProfileForm(forms.Form):
     first_name = forms.CharField()
     last_name = forms.CharField()
     email = forms.EmailField()
-    default_currency = forms.ModelChoiceField(queryset=Currency.objects.all())
+    default_currency = forms.ModelChoiceField(queryset=Currency.objects.all(), blank=False)

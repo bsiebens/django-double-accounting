@@ -32,17 +32,17 @@ INTERNAL_IPS = ["127.0.0.1"]
 # Application definition
 
 INSTALLED_APPS = [
-    "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.humanize",
     "mptt",
     "taggit",
     "taggit_helpers",
-    "graphene_django",
     "blackbook.apps.BlackbookConfig",
+    "django.contrib.admin",
 ]
 
 if DEBUG:

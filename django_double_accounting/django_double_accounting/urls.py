@@ -16,12 +16,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
-
-from graphene_django.views import GraphQLView
+from django.http import HttpResponseRedirect
 
 urlpatterns = [
+    path("", lambda r: HttpResponseRedirect("blackbook/")),
+    path("blackbook/", include("blackbook.urls")),
+    path("accounts/", include("django.contrib.auth.urls")),
     path("admin/", admin.site.urls),
-    path("graphql", GraphQLView.as_view(graphiql=True)),
 ]
 
 if settings.DEBUG:
