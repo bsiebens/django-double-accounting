@@ -1,4 +1,9 @@
-{% extends 'base.html' %} {% load humanize %} {% block body %}
+{% extends 'base.html' %} 
+
+{% load navigationtags %}
+{% load humanize %} 
+
+{% block body %}
 <nav id="navbar-main" class="navbar is-fixed-top">
     <div class="navbar-brand">
         <a class="navbar-item is-hidden-desktop jb-aside-mobile-toggle">
@@ -31,7 +36,7 @@
                     </span>
                 </a>
                 <div class="navbar-dropdown">
-                    <a class="navbar-item jb-modal" data-target="modal-account-add" href="#">
+                    <a class="navbar-item jb-modal" data-target="modal-account-add" href="{% url "blackbook:accounts_add" %}">
                         <span class="icon"><i class="fas fa-landmark"></i></span>
                         <span>Add account</span>
                     </a>
@@ -112,7 +117,7 @@
             <p class="menu-label">General</p>
             <ul class="menu-list">
                 <li>
-                    <a href="#" class="has-icon">
+                    <a href="{% url "blackbook:dashboard" %}" class="has-icon {% is_active "dashboard" %}">
                         <span class="icon"><i class="fas fa-desktop"></i></span>
                         <span class="menu-item-label">Dashboard</span>
                     </a>
@@ -130,31 +135,31 @@
             <p class="menu-label">Accounts</p>
             <ul class="menu-list">
                 <li>
-                    <a href="#" class="has-icon">
+                    <a href="{% url "blackbook:accounts_list" "assets" %}" class="has-icon {% is_active "assets" %}">
                         <span class="icon"><i class="fas fa-landmark"></i></span>
                         <span class="menu-item-label">Asset accounts</span>
                     </a>
                 </li>
                 <li>
-                    <a href="#" class="has-icon">
+                    <a href="{% url "blackbook:accounts_list" "income" %}" class="has-icon {% is_active "income" %}">
                         <span class="icon"><i class="fas fa-donate"></i></span>
-                        <span class="menu-item-label">Revenue accounts</span>
+                        <span class="menu-item-label">Income accounts</span>
                     </a>
                 </li>
                 <li>
-                    <a href="#" class="has-icon">
+                    <a href="{% url "blackbook:accounts_list" "expenses" %}" class="has-icon {% is_active "expenses" %}">
                         <span class="icon"><i class="fas fa-file-invoice-dollar"></i></span>
                         <span class="menu-item-label">Expense accounts</span>
                     </a>
                 </li>
                 <li>
-                    <a href="#" class="has-icon">
+                    <a href="{% url "blackbook:accounts_list" "liabilities" %}" class="has-icon {% is_active "liabilities" %}">
                         <span class="icon"><i class="fas fa-home"></i></span>
                         <span class="menu-item-label">Liabilities</span>
                     </a>
                 </li>
                 <li>
-                    <a href="#" class="has-icon">
+                    <a href="{% url "blackbook:accounts_list" "cash" %}" class="has-icon {% is_active "cash" %}">
                         <span class="icon"><i class="fas fa-coins"></i></span>
                         <span class="menu-item-label">Cash accounts</span>
                     </a>
@@ -229,7 +234,7 @@
             <p class="menu-label">Settings</p>
             <ul class="menu-list">
                 <li>
-                    <a href="{% url "blackbook:profile" %}" class="has-icon">
+                    <a href="{% url "blackbook:profile" %}" class="has-icon {% is_active "profile" %}">
                         <span class="icon"><i class="fas fa-cog"></i></span>
                         <span class="menu-item-label">Settings</span>
                     </a>

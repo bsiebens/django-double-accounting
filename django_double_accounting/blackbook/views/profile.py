@@ -40,7 +40,7 @@ def profile(request):
                 set_message(request, "f|Your profile could not be saved - please correct the errors below and try again")
 
         if "password_submit" in request.POST:
-            password_form = PasswordChangeForm(request.USER, request.POST)
+            password_form = PasswordChangeForm(request.user, request.POST)
 
             if password_form.is_valid():
                 password_form.save()

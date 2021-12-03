@@ -16,12 +16,19 @@
                             {{ field }}
                             <span class="check"></span>
                         </label>
+                    {% elif field.widget_type == "checkboxselectmultiple" %}
+                        <label class="checkbox">
+                            {{ field }}
+                        </label>
                     {% else %}
                         {% if field.widget_type == "select" %}
                             <div class="select is-fullwidth{% if field.errors %} is-danger{% endif %}">
                         {% endif %}
+                        {% if field.widget_type == "selectmultiple" %}
+                            <div class="select is-fullwidth is-multiple{% if field.errors %} is-danger{% endif %}">
+                        {% endif %}
                             {{ field|add_class }}
-                        {% if field.widget_type == "select" %}
+                        {% if field.widget_type == "select" or field.widget_type == "selectmultiple" %}
                             </div>
                         {% endif %}
                         {% if field.label == "Date" or field.label == "Category" or field.label == "Budget" or icon is not None %}

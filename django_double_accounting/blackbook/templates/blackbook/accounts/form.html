@@ -1,0 +1,160 @@
+{% extends 'blackbook/base.html' %}
+
+{% load formtags %}
+{% load humanize %}
+{% load iban %}
+
+{% block title %}
+    Accounts
+{% endblock %}
+
+{% block breadcrumbs %}
+    <li>Accounts</li>
+    {% if account.pk is not None %}
+        <li>Edit account</li>
+    {% else %}
+        <li>Add account</li>
+    {% endif %}
+{% endblock breadcrumbs %}
+
+{% block content %}
+    <div class="tile is-ancestor">
+        <div class="tile is-parent">
+            <div class="card tile is-child">
+                <header class="card-header">
+                    <p class="card-header-title">
+                        <span class="icon">
+                            <i class="fas fa-landmark"></i>
+                        </span>
+                        <span>
+                            {% if account.pk is not None %}
+                                Edit account
+                            {% else %}
+                                Add account
+                            {% endif %}
+                        </span>
+                    </p>
+                </header>
+                <div class="card-content">
+                    <form method="post" action="{% if account.pk is not None %}{% url "blackbook:accounts_edit" account.uuid %}{% else %}{% url "blackbook:accounts_add" %}{% endif %}">
+                        {% csrf_token %} 
+
+                        {% form_field account_form.name %}
+                        {% form_field account_form.type %}
+                        {% form_field account_form.parent %}
+                        {% form_field account_form.iban %}
+                        {% form_field account_form.currencies %}
+                        <hr />
+                        {% form_field account_form.is_active %}
+                        {% form_field account_form.include_on_net_worth %}
+                        {% form_field account_form.include_on_dashboard %}
+                        <hr />
+                        
+                        <div class="field is-horizontal">
+                            <div class="field-label is-normal">
+                            </div>
+                            <div class="field-body">
+                                <div class="field">
+                                    <div class="control">
+                                        <button type="submit" name="profile_submit" class="button is-primary">
+                                            Submit
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="tile is-parent">
+            <div class="card tile is-child">
+                <header class="card-header">
+                    <p class="card-header-title">
+                        <span class="icon">
+                            <i class="fas fa-landmark"></i>
+                        </span>
+                        <span>Account information</span>
+                    </p>
+                </header>
+                <div class="card-content">
+                    {% if account.id is not None %}
+                        <div class="is-user-avatar image has-max-width is-aligned-center">
+                            <img src="https://avatars.dicebear.com/api/identicon/{{ account.uuid|slugify }}.svg"> 
+                        </div>
+
+                        <hr />
+                    {% endif %}
+
+                    <div class="columns">
+                        <div class="column">
+                            <div class="field">
+                                <label class="label">Name</label>
+                                <div class="control is-clearfix">
+                                    <input type="text" readonly value="{{ account.accountstring|default:"-" }}" class="input is-static">
+                                </div>
+                            </div>
+                            <div class="field">
+                                <label class="label">Account Type</label>
+                                <div class="control is-clearfix">
+                                    <input type="text" readonly value="{{ account.get_type_display|default:"-" }}" class="input is-static">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="column">
+                            <div class="field">
+                                <label class="label">Currenc{% if account.pk %}{{ account.currencies.all|pluralize:"y,ies" }}{% else %}y{% endif %}</label>
+                                <div class="control is-clearfix">
+                                    <input type="text" readonly value="{% if account.pk %}{{ account.currencies.all|join:", "|default:"-" }}{% else %}-{% endif %}" class="input is-static">
+                                </div>
+                            </div>
+                            <div class="field">
+                                <label class="label">IBAN</label>
+                                <div class="control is-clearfix">
+                                    <input type="text" readonly value="{{ account.iban|iban|default:"-" }}" class="input is-static">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <hr />
+                    <div class="columns">
+                        <div class="column">
+                            <div class="field">
+                                <label class="label">Current balance{% if account.pk %}{{ account.balance|pluralize }}{% endif %}</label>
+                                <div class="control is-clearfix">
+                                    {% if account.pk is not None and account.balance %}
+                                        {% for currency in account.balance %}
+                                            <input type="text" readonly value="{{ currency.0 }} {{ currency.1 }}" class="input is-static">
+                                        {% endfor %}
+                                    {% else %}
+                                        <input type="text" readonly value="-" class="input is-static">
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <hr />
+                    <div class="columns">
+                        <div class="column">
+                            <div class="field">
+                                <label class="label">Created</label>
+                                <div class="control is-clearfix">
+                                    <input type="text" readonly value="{{ account.created|naturaltime|default:"-" }}" class="input is-static">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="column">
+                            <div class="field">
+                                <label class="label">Modified</label>
+                                <div class="control is-clearfix">
+                                    <input type="text" readonly value="{{ account.modified|naturaltime|default:"-" }}" class="input is-static">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

@@ -2,42 +2,118 @@ from django.template.defaultfilters import slugify
 from django.contrib import messages
 from django.shortcuts import redirect
 from django.utils.html import format_html
+from django.utils import timezone
+
+from datetime import date, datetime
+from dateutil.relativedelta import relativedelta, MO
 
 import re
 
 
-def set_message(request, message, title=None):
-    message_flag = {
-        "s": messages.SUCCESS,
-        "f": messages.ERROR,
-        "w": messages.WARNING,
-        "i": messages.INFO,
-    }
+def set_message(request, message):
+    message_flag = {"s": messages.SUCCESS, "f": messages.ERROR, "w": messages.WARNING, "i": messages.INFO}
+    message_class = {"s": "success", "f": "danger", "w": "warning", "i": "info"}
+    message_icon = {"s": "check", "f": "times", "w": "exclamation", "i": "info"}
 
-    message_class = {
-        "s": "is-success",
-        "f": "is-danger",
-        "w": "is-warning",
-        "i": "is-info",
-    }
-
-    if title is not None:
-        message_text = format_html(
-            '<article class="message {messageclass}"><div class="message-header">{messagetitle}</div><div class="message-body">{messagetext}</div></article>'.format(
-                messageclass=message_class[message[0:1]], messagetext=message[2:], messagetitle=title
-            )
+    message_text = format_html(
+        """
+        <div class="notification is-{message_class}">
+            <div class="level">
+                <div class="level-left">
+                    <div class="level-item">
+                        <span class="icon">
+                            <i class="fas fa-{message_icon}-circle"></i>
+                        </span>
+                    </div>
+                    <div class="level-item">
+                        {message_text}
+                    </div>
+                </div>
+                <div class="level-right">
+                    <div class="level-item">
+                        <button type="button" class="button is-small is-white jb-notification-dismiss">
+                            Dismiss
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>""".format(
+            message_class=message_class[message[0:1]], message_icon=message_icon[message[0:1]], message_text=message[2:]
         )
-    else:
-        message_text = format_html(
-            '<article class="message {messageclass}"><div class="message-body">{messagetext}</div></article>'.format(
-                messageclass=message_class[message[0:1]], messagetext=message[2:]
-            )
-        )
+    )
     messages.add_message(request, message_flag[message[0:1]], message_text, fail_silently=True)
 
 
+def calculate_period(periodicity, start_date=timezone.localtime(), as_tuple=False):
+    if type(start_date) == datetime:
+        start_date = start_date.date()
+
+    if type(start_date) != date:
+        raise AttributeError("start date should be a date or datetime object")
+
+    periodicity_to_relativedate_transformer = {
+        "day": {
+            "start": relativedelta(days=0),
+            "end": relativedelta(days=0),
+        },
+        "week": {
+            "start": relativedelta(weekday=MO(-1)),
+            "end": relativedelta(days=6),
+        },
+        "month": {
+            "start": relativedelta(day=1),
+            "end": relativedelta(months=1, days=-1),
+        },
+        "quarter": {
+            "start": relativedelta(day=1, month=(3 * ((start_date.month - 1) // 3) + 1)),
+            "end": relativedelta(months=3, days=-1),
+        },
+        "half_year": {
+            "start": relativedelta(day=1, month=(6 * ((start_date.month - 1) // 6) + 1)),
+            "end": relativedelta(months=6, days=-1),
+        },
+        "year": {
+            "start": relativedelta(day=1, month=1),
+            "end": relativedelta(years=1, days=-1),
+        },
+    }
+
+    start_date += periodicity_to_relativedate_transformer[periodicity]["start"]
+    end_date = start_date + periodicity_to_relativedate_transformer[periodicity]["end"]
+
+    if as_tuple:
+        return (start_date, end_date)
+
+    return {"start_date": start_date, "end_date": end_date}
+
+
+def display_period(periodicty, start_date=timezone.localdate()):
+    if periodicty == "day":
+        return start_date.strftime("%d %b %Y")
+    elif periodicty == "week":
+        return "Week of {date}".format(date=(start_date + relativedelta(weekday=MO(-1))).strftime("%d %b %Y"))
+    elif periodicty == "month":
+        return start_date.strftime("%b %Y")
+    elif periodicty == "quarter":
+        if start_date.month <= 3:
+            return "Quarter 1 {year}".format(year=start_date.year)
+        elif start_date.month <= 6:
+            return "Quarter 2 {year}".format(year=start_date.year)
+        elif start_date.month <= 9:
+            return "Quarter 3 {year}".format(year=start_date.year)
+        else:
+            return "Quarter 4 {year}".format(year=start_date.year)
+    elif periodicty == "half_year":
+        if start_date.month <= 6:
+            return "First half {year}".format(year=start_date.year)
+        else:
+            return "Second half {year}".format(year=start_date.year)
+    else:
+        return start_date.year
+
+
 def set_message_and_redirect(request, message, url, title=None):
-    set_message(request, message, title)
+    set_message(request, message)
 
     return redirect(url)
 

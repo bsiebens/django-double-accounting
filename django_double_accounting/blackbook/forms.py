@@ -1,9 +1,43 @@
 from django import forms
-from django.utils import timezone
+from django.utils import timezone, safestring
 
-from blackbook.models.currency import CurrencyConversion
+from mptt.forms import TreeNodeChoiceField
 
-from .models import Currency
+from .models import Currency, CurrencyConversion, Account
+
+import re
+
+
+class ListTextWidget(forms.TextInput):
+    def __init__(self, data_list, name, to_python_function, *args, **kwargs):
+        super(ListTextWidget, self).__init__(*args, **kwargs)
+
+        self._name = name
+        self._list = data_list
+        self.attrs.update({"list": "list__%s" % self._name})
+        self.to_python_function = to_python_function
+
+    def render(self, name, value, attrs=None, renderer=None):
+        text_html = super(ListTextWidget, self).render(name, value, attrs=attrs)
+        data_list = '<datalist id="list__%s">' % self._name
+
+        for item in self._list:
+            data_list += '<option value="%s">%s</option>' % (item, item)
+
+        data_list += "</datalist>"
+
+        return safestring.mark_safe(text_html + data_list)
+
+    def to_python(self, value):
+        return self.to_python_function(value)
+
+
+def accountstring_to_account(value):
+    try:
+        return Account.objects.get(accountsstring=value)
+
+    except Account.DoesNotExist:
+        return None
 
 
 class CurrencyForm(forms.ModelForm):
@@ -25,3 +59,15 @@ class ProfileForm(forms.Form):
     last_name = forms.CharField()
     email = forms.EmailField()
     default_currency = forms.ModelChoiceField(queryset=Currency.objects.all(), blank=False)
+
+
+class AccountForm(forms.ModelForm):
+    type = forms.ChoiceField(choices=Account.AccountType.choices, initial=Account.AccountType.ASSET_ACCOUNT)
+    parent = TreeNodeChoiceField(queryset=Account.objects.filter(is_active=True), empty_label="None", required=False)
+
+    class Meta:
+        model = Account
+        fields = ["parent", "currencies", "name", "type", "is_active", "include_on_net_worth", "include_on_dashboard", "iban"]
+        widgets = {
+            "currencies": forms.CheckboxSelectMultiple(),
+        }

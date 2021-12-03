@@ -1,5 +1,7 @@
 from datetime import timedelta, date
 
+from .models import Account
+
 import json
 
 
@@ -67,11 +69,10 @@ class Chart:
 
 
 class AccountChart(Chart):
-    def __init__(self, data, accounts, start_date, end_date, user=None, *args, **kwargs):
+    def __init__(self, data, accounts, start_date, end_date, *args, **kwargs):
         self.start_date = start_date
         self.end_date = end_date
         self.accounts = accounts
-        self.user = user
 
         super().__init__(data=data, *args, **kwargs)
 
@@ -97,77 +98,133 @@ class AccountChart(Chart):
 
         data = {"type": "line", "data": {"labels": [date.strftime("%d %b %Y") for date in dates], "datasets": []}}
 
-        # accounts = {}
-        # accounts_virtual_balance = {}
+        accounts = {}
 
-        # for item in self.data:
-        #     if str(item.amount.currency) == str(self.currency) and item.account is not None:
-        #         account_key = "{type} - {account}".format(type=item.account.get_type_display(), account=item.account.name)
+        for item in self.data:
+            account_key = "{account} - {currency}".format(account=item.account.accountstring, currency=item.currency)
 
-        #         if account_key in accounts.keys():
-        #             date_entry = accounts[account_key].get(item.journal.date, Money(0, self.currency))
-        #             date_entry += item.amount
+            if account_key in accounts.keys():
+                accounts[account_key][item.journal_entry.date] = accounts[account_key].get(item.journal_entry.date, 0) + item.amount
+            else:
+                accounts[account_key] = {item.journal_entry.date: item.amount}
 
-        #             accounts[account_key][item.journal.date] = date_entry
+        for account in self.accounts:
+            for currency in account.currencies.all():
+                account_key = "{account} - {currency}".format(account=account.accountstring, currency=currency.code)
 
-        #         else:
-        #             accounts[account_key] = {item.journal.date: item.amount}
-        #             accounts_virtual_balance[account_key] = item.account.virtual_balance
+                if account_key not in accounts.keys():
+                    accounts[account_key] = {}
 
-        # for account in self.accounts:
-        #     account_key = "{type} - {account}".format(type=account.get_type_display(), account=account.name)
+            start_balance = account.balance_until_date(self.start_date - timedelta(days=1))
+            for currency in start_balance:
+                account_key = "{account} - {currency}".format(account=account.accountstring, currency=currency[1])
 
-        #     if account_key not in accounts.keys():
-        #         accounts[account_key] = {}
+                if account_key in accounts.keys():
+                    accounts[account_key][self.start_date] = accounts[account_key].get(self.start_date, 0) + currency[0]
+                else:
+                    accounts[account_key] = {self.start_date: currency[0]}
 
-        # counter = 1
-        # for account, date_entries in accounts.items():
-        #     color = get_color_code(counter)
+        counter = 1
+        for account, date_entries in accounts.items():
+            color = get_color_code(counter)
+            counter += 1
 
-        #     account_data = {
-        #         "label": account,
-        #         "fill": "!1",
-        #         "borderColor": "rgba({color}, 1.0)".format(color=color),
-        #         "borderWidth": 2,
-        #         "borderDash": [],
-        #         "borderDash0ffset": 0,
-        #         "pointBackgroundColor": "rgba({color}, 1.0)".format(color=color),
-        #         "pointBorderColor": "rgba(255,255,255,0)",
-        #         "pointHoverBackgroundColor": "rgba({color}, 1.0)".format(color=color),
-        #         "pointBorderWidth": 20,
-        #         "pointHoverRadius": 4,
-        #         "pointHoverBorderWidth": 15,
-        #         "pointRadius": 4,
-        #         "data": [],
-        #     }
+            account_data = {
+                "label": account,
+                "fill": "!1",
+                "borderColor": "rgba({color}, 1.0)".format(color=color),
+                "borderWidth": 2,
+                "borderDash": [],
+                "borderDash0ffset": 0,
+                "pointBackgroundColor": "rgba({color}, 1.0)".format(color=color),
+                "pointBorderColor": "rgba(255,255,255,0)",
+                "pointHoverBackgroundColor": "rgba({color}, 1.0)".format(color=color),
+                "pointBorderWidth": 20,
+                "pointHoverRadius": 4,
+                "pointHoverBorderWidth": 15,
+                "pointRadius": 4,
+                "data": [],
+            }
 
-        #     if abs((self.end_date - self.start_date).days) > 150:
-        #         account_data["pointRadius"] = 0
+            if abs((self.end_date - self.start_date).days) > 150:
+                account_data["pointRadius"] = 0
 
-        #     counter += 1
+            for date_index in range(len(dates)):
+                date = dates[date_index]
+                value = 0
 
-        #     for date_index in range(len(dates)):
-        #         date = dates[date_index]
+                if date_index != 0:
+                    value = account_data["data"][date_index - 1]
 
-        #         value = 0
+                if date in date_entries.keys():
+                    value += float(date_entries[date])
 
-        #         if date_index == 0:
-        #             account_name = " - ".join(account.split(" - ")[1:])
-        #             account_type = Account.AccountType.ASSET_ACCOUNT
+                account_data["data"].append(round(value, 2))
+            data["data"]["datasets"].append(account_data)
 
-        #             for type in Account.AccountType:
-        #                 if type.label == account.split(" - ")[0]:
-        #                     account_type = type
+        return data
 
-        #             account_object = Account.objects.get(name=account_name, type=account_type)
-        #             value = float(account_object.balance_until_date(date - timedelta(days=1)).amount) - float(account_object.virtual_balance)
-        #         else:
-        #             value = account_data["data"][date_index - 1]
 
-        #         if date in date_entries.keys():
-        #             value += float(date_entries[date].amount)
+class TransactionChart(Chart):
+    def __init__(self, data, payee=False, expenses_budget=False, expenses_tag=False, *args, **kwargs):
+        self.payee = payee
+        self.expenses_budget = expenses_budget
+        self.expenses_tag = expenses_tag
 
-        #         account_data["data"].append(round(value, 2))
-        #     data["data"]["datasets"].append(account_data)
+        super().__init__(data=data, *args, **kwargs)
+
+    def _generate_chart_options(self):
+        options = self._get_default_options()
+
+        options["scales"] = {}
+        options["legend"] = {"position": "right"}
+
+        return options
+
+    def _generate_chart_data(self):
+        data = {
+            "type": "pie",
+            "data": {
+                "labels": [],
+                "datasets": [
+                    {
+                        "data": [],
+                        "borderWidth": [],
+                        "backgroundColor": [],
+                        "borderColor": [],
+                    },
+                ],
+            },
+        }
+
+        amounts = {}
+
+        self.data = [item for item in self.data if item.amount < 0]
+
+        for transaction in self.data:
+            series_name = "Unknown - {currency}".format(currency=transaction.currency.code)
+
+            if self.payee:
+                series_name = "{name} - {currency}".format(name=transaction.journal_entry.payee, currency=transaction.currency.code)
+                amounts[series_name] = amounts.get(series_name, 0) + float(transaction.amount)
+
+            elif self.expenses_tag:
+                for tag in transaction.journal_entry.tags.all():
+                    series_name = "{name} - {currency}".format(name=tag, currency=transaction.currency.code)
+                    amounts[series_name] = amounts.get(series_name, 0) + float(transaction.amount)
+
+            else:
+                amounts[series_name] = amounts.get(series_name, 0) + float(transaction.amount)
+
+        counter = 1
+        for series, amount in amounts.items():
+            color = get_color_code(counter)
+            counter += 1
+
+            data["data"]["labels"].append(series)
+            data["data"]["datasets"][0]["data"].append(round(amount, 2))
+            data["data"]["datasets"][0]["borderWidth"].append(2)
+            data["data"]["datasets"][0]["backgroundColor"].append("rgba({color}, 1.0)".format(color=color))
+            data["data"]["datasets"][0]["borderColor"].append("rgba(255, 255, 255, 1.0)".format(color=color))
 
         return data
