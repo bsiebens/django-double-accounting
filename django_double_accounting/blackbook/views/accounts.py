@@ -50,7 +50,7 @@ def view(request, account_type=None, uuid=None):
             "expense_payee_chart_count": len([item for item in transactions if item.amount > 0]),
             "expense_budget_chart_count": 0,  # len([item for item in transactions if item.amount < 0 and item.journal_entry.budget is not None]),
             "expense_tag_chart": TransactionChart(data=transactions, expenses_tag=True).generate_json(),
-            "expense_tag_chart_count": len([item for item in transactions if item.amount < 0 and item.journal_entry.tags.count is not 0]),
+            "expense_tag_chart_count": len([item for item in transactions if item.amount < 0 and item.journal_entry.tags.count != 0]),
         }
 
         return render(

@@ -89,13 +89,31 @@
                         <span class="icon">
                             <i class="fas fa-arrow-down"></i>
                         </span>
-                        <span>+XXX EUR</span>
+                        <span>
+                            {% if data.totals.period.in %}
+                                {% for currency, amount in data.totals.period.in.items %}
+                                    +{{ amount|floatformat:"2" }} {{ currency }}
+                                    {% if not forloop.last %}<br />{% endif %}
+                                {% endfor %}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </span>
                     </p>
                     <p class="card-header-title has-text-danger">
                         <span class="icon">
                             <i class="fas fa-arrow-up"></i>
                         </span>
-                        <span>{% if data.totals.period.out.amount == 0 %}-{% endif %}XXX EUR</span>
+                        <span>
+                            {% if data.totals.period.out %}
+                                {% for currency, amount in data.totals.period.out.items %}
+                                    {{ amount|floatformat:"2" }} {{ currency }}
+                                    {% if not forloop.last %}<br />{% endif %}
+                                {% endfor %}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </span>
                     </p>
                 </header>
                 <div class="card-content">
@@ -103,8 +121,17 @@
                         <div class="level-item">
                             <div class="is-widget-label">
                                 <h3 class="subtitle is-spaced">Balance</h3>
-                                <h1 class="title has-text-{% if data.totals.period.total.amount > 0 %}success{% elif data.totals.period.total.amount < 0 %}danger{% else %}grey{% endif %}">
-                                    {% if data.totals.period.total.amount >= 0 %}+{% endif %}XXX EUR
+                                <h1 class="title">
+                                    {% if data.totals.period.total %}
+                                        {% for currency, amount in data.totals.period.total.items %}
+                                            <span class="has-text-{% if amount > 0 %}success{% elif amount < 0 %}danger{% else %}grey{% endif %}">
+                                                {% if amount > 0 %}+{% endif %}{{ amount|floatformat:"2" }} {{ currency }}
+                                            </span>
+                                            {% if not forloop.last %}<br />{% endif %}
+                                        {% endfor %}
+                                    {% else %}
+                                        -
+                                    {% endif %}
                                 </h1>
                             </div>
                         </div>
@@ -138,7 +165,16 @@
                             <div class="is-widget-label">
                                 <h3 class="subtitle is-spaced">Net worth</h3>
                                 <h1 class="title">
-                                    XXX EUR
+                                    {% if data.totals.net_worth.count > 0 %}
+                                        {% for currency in data.totals.net_worth %}
+                                            <span class="has-text-{% if currency.total > 0 %}success{% elif currency.total < 0 %}danger{% else %}grey{% endif %}">{% if currency.total > 0 %}+{% endif %}{{ currency.total|floatformat:"2"}} {{ currency.currency__code }}</span>
+                                            {% if not forloop.last %}
+                                                <br />
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% else %}
+                                        -
+                                    {% endif %}
                                 </h1>
                             </div>
                         </div>
@@ -263,7 +299,7 @@
                             <div class="is-widget-label">
                                 <h3 class="subtitle is-spaced">Transactions</h3>
                                 <h1 class="title">
-                                    XXX
+                                    {{ data.transaction_count }}
                                 </h1>
                             </div>
                         </div>
@@ -283,6 +319,9 @@
             <div class="card is-card-widget tile is-child">
                 <header class="card-header">
                     <p class="card-header-title">
+                        {{ data.period|unlocalize }}
+                    </p>
+                    <p class="card-header-title">
                         <span class="icon"></span>
                     </p>
                     <button type="button" class="button is-small">
@@ -297,7 +336,11 @@
                             <div class="is-widget-label">
                                 <h3 class="subtitle is-spaced">Largest amount</h3>
                                 <h1 class="title">
-                                    XXX EUR
+                                    {% if data.highest_amount is not None %}
+                                        {{ data.highest_amount.amount|floatformat:"2" }} {{ data.highest_amount.currency.code }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
                                 </h1>
                             </div>
                         </div>
@@ -317,6 +360,9 @@
             <div class="card is-card-widget tile is-child">
                 <header class="card-header">
                     <p class="card-header-title">
+                        {{ data.period|unlocalize }}
+                    </p>
+                    <p class="card-header-title">
                         <span class="icon"></span>
                     </p>
                     <button type="button" class="button is-small">
@@ -331,7 +377,7 @@
                             <div class="is-widget-label">
                                 <h3 class="subtitle is-spaced">Payees</h3>
                                 <h1 class="title">
-                                    X
+                                    {{ data.payee_count }}
                                 </h1>
                             </div>
                         </div>
@@ -351,6 +397,9 @@
             <div class="card is-card-widget tile is-child">
                 <header class="card-header">
                     <p class="card-header-title">
+                        {{ data.period|unlocalize }}
+                    </p>
+                    <p class="card-header-title">
                         <span class="icon"></span>
                     </p>
                     <button type="button" class="button is-small">
@@ -365,7 +414,11 @@
                             <div class="is-widget-label">
                                 <h3 class="subtitle is-spaced">Most used payee</h3>
                                 <h1 class="title">
-                                    XXX XXX
+                                    {% if data.most_used_payee is not None %}
+                                        {{ data.most_used_payee }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
                                 </h1>
                             </div>
                         </div>
@@ -399,7 +452,7 @@
                             <div class="is-widget-label">
                                 <h3 class="subtitle is-spaced">Most used tag</h3>
                                 <h1 class="title">
-                                    XXX XXX 
+                                    {{ data.most_used_tag }}
                                 </h1>
                             </div>
                         </div>
