@@ -1,4 +1,4 @@
-from django.contrib.auth import login
+from django.db.models import ProtectedError
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
@@ -113,7 +113,7 @@ def delete(request):
                 reverse("blackbook:dashboard"),
             )
 
-        except RestrictedError:
+        except ProtectedError:
             return set_message_and_redirect(
                 request,
                 "f|Cannot remove {account.name} ({account.accountstring}), there are still transactions linked to this account".format(
