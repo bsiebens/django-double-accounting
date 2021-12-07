@@ -8,6 +8,10 @@ from .models import Currency, CurrencyConversion, Account
 import re
 
 
+class DateInput(forms.DateInput):
+    input_type = "date"
+
+
 class ListTextWidget(forms.TextInput):
     def __init__(self, data_list, name, to_python_function, *args, **kwargs):
         super(ListTextWidget, self).__init__(*args, **kwargs)
@@ -71,3 +75,15 @@ class AccountForm(forms.ModelForm):
         widgets = {
             "currencies": forms.CheckboxSelectMultiple(),
         }
+
+
+class TransactionFilterForm(forms.Form):
+    start_date = forms.DateField(widget=DateInput, required=False)
+    end_date = forms.DateField(widget=DateInput, required=False)
+    description = forms.CharField(required=False, widget=forms.TextInput(attrs={"placeholder": "Search description", "size": 40}))
+    account = TreeNodeChoiceField(queryset=Account.objects.filter(is_active=True), empty_label="None", required=False)
+    tag = forms.CharField(required=False, widget=forms.TextInput(attrs={"placeholder": "Search tags (split by space)"}))
+    budget = forms.CharField(required=False)
+
+    def __init__(self, *args, **kwargs):
+        super(TransactionFilterForm, self).__init__(*args, **kwargs)
