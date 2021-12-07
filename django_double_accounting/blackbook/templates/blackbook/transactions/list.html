@@ -19,11 +19,11 @@
                         <span class="icon">
                             <i class="fas fa-calendar-alt"></i>
                         </span>
-                        <span>Current period - income</span>
+                        <span>Current period - expenses by payee</span>
                     </p>
                 </header>
                 <div class="card-content">
-                    {% if charts.income_chart_count == 0 %}
+                    {% if charts.expense_payee_chart_count == 0 %}
                         <h3 class="subtitle is-spaced has-text-centered">No transaction information available yet.</h3>
                     {% else %}
                         <div class="chart-area">
@@ -36,7 +36,7 @@
                                         <div></div>
                                     </div>
                                 </div>
-                                <canvas id="transaction-income-chart" width="2992" height="1000" class="chartjs-render-monitor" style="display: block; height: 250px; width: 250px;"></canvas>
+                                <canvas id="transaction-expense-payee-chart" width="2992" height="1000" class="chartjs-render-monitor" style="display: block; height: 250px; width: 250px;"></canvas>
                             </div>
                         </div>
                     {% endif %}
@@ -50,11 +50,11 @@
                         <span class="icon">
                             <i class="fas fa-calendar-alt"></i>
                         </span>
-                        <span>Current period - expenses by category</span>
+                        <span>Current period - expenses by tag</span>
                     </p>
                 </header>
                 <div class="card-content">
-                    {% if charts.expense_category_chart_count == 0 %}
+                    {% if charts.expense_tag_chart_count == 0 %}
                         <h3 class="subtitle is-spaced has-text-centered">No transaction information available yet.</h3>
                     {% else %}
                         <div class="chart-area">
@@ -67,7 +67,7 @@
                                         <div></div>
                                     </div>
                                 </div>
-                                <canvas id="transaction-expense-category-chart" width="2992" height="1000" class="chartjs-render-monitor" style="display: block; height: 250px; width: 250px;"></canvas>
+                                <canvas id="transaction-expense-tag-chart" width="2992" height="1000" class="chartjs-render-monitor" style="display: block; height: 250px; width: 250px;"></canvas>
                             </div>
                         </div>
                     {% endif %}
@@ -308,14 +308,14 @@
 {% endblock modals %}
 
 {% block javascript %}
-    {% if charts.income_chart_count != 0 %}
-        let transactionIncomeChartCTX = document.getElementById("transaction-income-chart").getContext("2d");
-        new Chart(transactionIncomeChartCTX, {{ charts.income_chart|safe }});
+    {% if charts.expense_payee_chart_count != 0 %}
+        let transactionPayeeChartCTX = document.getElementById("transaction-expense-payee-chart").getContext("2d");
+        new Chart(transactionPayeeChartCTX, {{ charts.expense_payee_chart|safe }});
     {% endif %}
 
-    {% if charts.expense_category_chart_count != 0%}   
-        let expenseCategoryChartCTX = document.getElementById("transaction-expense-category-chart").getContext("2d");
-        new Chart(expenseCategoryChartCTX, {{ charts.expense_category_chart|safe }});
+    {% if charts.expense_tag_chart_count != 0%}   
+        let expenseTagChartCTX = document.getElementById("transaction-expense-tag-chart").getContext("2d");
+        new Chart(expenseTagChartCTX, {{ charts.expense_tag_chart|safe }});
     {% endif %}
 
     {% if charts.expense_budget_chart_count != 0 %}

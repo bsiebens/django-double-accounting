@@ -1,10 +1,11 @@
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
-from django.db.models import Q
+from django.db.models import Q, Prefetch
 from django.shortcuts import render
 
 from ..forms import TransactionFilterForm
-from ..models import get_default_value, TransactionJournal
+from ..charts import TransactionChart
+from ..models import get_default_value, TransactionJournal, Transaction
 from ..utilities import calculate_period, set_message_and_redirect, set_message
 
 
@@ -41,9 +42,24 @@ def view(request):
         .prefetch_related("transactions", "transactions__account", "transactions__currency", "tags")
         .order_by("-date")
     )
+    transactions = (
+        Transaction.objects.filter(journal_entry__in=transaction_journals)
+        .select_related("journal_entry", "account", "currency")
+        .prefetch_related("journal_entry__tags")
+    )
+
+    charts = {
+        "expense_payee_chart": TransactionChart(data=transactions, payee=True).generate_json(),
+        "expense_payee_chart_count": transactions.filter(amount__lt=0).exclude(journal_entry__payee=None).count(),
+        "expense_budget_chart_count": 0,  # len([item for item in transactions if item.amount < 0 and item.journal_entry.budget is not None]),
+        "expense_tag_chart": TransactionChart(data=transactions, expenses_tag=True).generate_json(),
+        "expense_tag_chart_count": len([item for item in transactions.filter(amount__lt=0).all() if item.journal_entry.tags.count != 0]),
+    }
 
     return render(
-        request, "blackbook/transactions/list.html", {"filter_form": filter_form, "period": period, "transaction_journals": transaction_journals}
+        request,
+        "blackbook/transactions/list.html",
+        {"filter_form": filter_form, "charts": charts, "period": period, "transaction_journals": transaction_journals},
     )
 
 

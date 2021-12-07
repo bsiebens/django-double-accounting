@@ -47,7 +47,7 @@ def view(request, account_type=None, uuid=None):
                 data=transactions, accounts=[account], start_date=period["start_date"], end_date=period["end_date"]
             ).generate_json(),
             "expense_payee_chart": TransactionChart(data=transactions, payee=True).generate_json(),
-            "expense_payee_chart_count": len([item for item in transactions if item.amount > 0]),
+            "expense_payee_chart_count": len([item for item in transactions if item.amount < 0]),
             "expense_budget_chart_count": 0,  # len([item for item in transactions if item.amount < 0 and item.journal_entry.budget is not None]),
             "expense_tag_chart": TransactionChart(data=transactions, expenses_tag=True).generate_json(),
             "expense_tag_chart_count": len([item for item in transactions if item.amount < 0 and item.journal_entry.tags.count != 0]),

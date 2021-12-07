@@ -205,7 +205,8 @@ class TransactionChart(Chart):
             series_name = "Unknown - {currency}".format(currency=transaction.currency.code)
 
             if self.payee:
-                series_name = "{name} - {currency}".format(name=transaction.journal_entry.payee, currency=transaction.currency.code)
+                if transaction.journal_entry.payee is not None:
+                    series_name = "{name} - {currency}".format(name=transaction.journal_entry.payee, currency=transaction.currency.code)
                 amounts[series_name] = amounts.get(series_name, 0) + float(transaction.amount)
 
             elif self.expenses_tag:
