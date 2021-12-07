@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
-from django.db.models import Q, Prefetch
+from django.urls import reverse
+from django.db.models import Q
 from django.shortcuts import render
 
 from ..forms import TransactionFilterForm
@@ -70,4 +71,14 @@ def add_edit(request):
 
 @login_required
 def delete(request):
-    pass
+    if request.method == "POST":
+        journal_entry = TransactionJournal.objects.get(uuid=request.POST.get("transaction_uuid"))
+        journal_entry.delete()
+
+        return set_message_and_redirect(
+            request,
+            "s|Transaction {journal_entry.short_description} was succesfully deleted".format(journal_entry=journal_entry),
+            reverse("blackbook:dashboard"),
+        )
+    else:
+        return set_message_and_redirect(request, "w|You are not allowed to access this page like this", reverse("blackbook:dashboard"))
