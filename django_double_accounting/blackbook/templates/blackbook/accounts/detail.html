@@ -345,7 +345,7 @@
                                         {% endif %}
                                     </td>
                                     <td data-label="Transaction">{{ transaction.journal_entry.short_description }}</td>
-                                    <td data-label="Payee">{{ transaction.journal_entry.payee|default:"-" }}</td>
+                                    <td data-label="Payee">{{ transaction.journal_entry.payee|default:"" }}</td>
                                     <td data-label="Amount">
                                         <span class="has-text-{% if transaction.amount < 0 %}danger{% else %}success{% endif %}">
                                             {% if not transaction.amount < 0 %}+{% endif %}{{ transaction.amount|floatformat:"2" }} {{ transaction.currency.code }}
@@ -367,16 +367,7 @@
                                         {% endif %}
                                     </td>
                                     <td data-label="Budget">
-                                        {% if transaction.journal.budget is not None %}
-                                            <span class="tag is-info">
-                                                <span class="icon">
-                                                    <i class="fas fa-chart-pie"></i>
-                                                </span>
-                                                <span>{{ transaction.journal.budget.budget.name }}</span>
-                                            </span>
-                                        {% else %}
-                                            -
-                                        {% endif %}
+                                        -
                                     </td>
                                     {% if not account.is_leaf_node %}
                                         <td data-label="Account">
@@ -402,8 +393,6 @@
                                                     {% endif %}
                                                 {% endfor %}
                                             </span>
-                                        {% else %}
-                                            -
                                         {% endif %}
                                     </td>
                                     <td>

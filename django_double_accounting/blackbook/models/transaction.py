@@ -138,5 +138,8 @@ class Transaction(models.Model):
     amount = models.DecimalField(max_digits=20, decimal_places=5)
     currency = models.ForeignKey(Currency, null=True, on_delete=models.SET_NULL)
 
+    class Meta:
+        ordering = ["amount", "currency"]
+
     def __str__(self):
         return "{i.account} {i.amount} {i.currency.code}".format(i=self)

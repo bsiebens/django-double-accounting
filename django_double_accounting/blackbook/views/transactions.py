@@ -28,7 +28,7 @@ def view(request):
             )
 
         if filter_form.cleaned_data["account"] is not None:
-            transaction_journals = transaction_journals.filter(transactions__acount=filter_form.cleaned_data["account"])
+            transaction_journals = transaction_journals.filter(transactions__account=filter_form.cleaned_data["account"])
 
         if filter_form.cleaned_data["tag"] != "":
             tags = filter_form.cleaned_data["tag"].split(" ")
@@ -38,7 +38,7 @@ def view(request):
 
     transaction_journals = (
         transaction_journals.filter(date__range=(period["start_date"], period["end_date"]))
-        .prefetch_related("transactions", "transactions__account", "transactions__currency")
+        .prefetch_related("transactions", "transactions__account", "transactions__currency", "tags")
         .order_by("-date")
     )
 

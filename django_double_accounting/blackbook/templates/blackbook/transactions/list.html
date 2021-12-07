@@ -163,12 +163,11 @@
                             <tr>
                                 <th></th>
                                 <th><div class="th-wrap">Transaction</div></th>
-                                <th><div class="th-wrap">Amount</div></th>
                                 <th><div class="th-wrap">Date</div></th>
+                                <th><div class="th-wrap">Payee</div></th>
                                 <th><div class="th-wrap">Category</div></th>
                                 <th><div class="th-wrap">Budget</div></th>
-                                <th><div class="th-wrap">Source account</div></th>
-                                <th><div class="th-wrap">Destination account</div></th>
+                                <th><div class="th-wrap">Transactions</div></th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -176,74 +175,35 @@
                             {% for entry in transaction_journals %}
                                 <tr>
                                     <td>
-                                        <span class="icon">
-                                            {% if entry.type == "transfer" %}
-                                                <i class="fas fa-exchange-alt"></i>
-                                            {% elif entry.type == "withdrawal" %}
-                                                <i class="fas fa-long-arrow-alt-left"></i>
-                                            {% else %}
-                                                <i class="fas fa-long-arrow-alt-right"></i>
-                                            {% endif %}
-                                        </span>
+                                        {{ forloop.counter }}
                                     </td>
-                                    <td data-label="Transaction">{{ entry.short_description }}</td>
-                                    <td data-label="Amount">
-                                        <span class="{% if entry.type != "transfer" %}has-text-{% if entry.amount.amount < 0 %}danger{% else %}success{% endif %}{% endif %}">
-                                            {% if entry.type != "transfer" and entry.amount.amount > 0 %}+{% endif %}{{ entry.amount }}
-                                        </span>
-                                    </td>
+                                    <td data-label="Transaction"><a class="jb-modal" data-target="modal-journal-entry-details-{{ entry.uuid }}">{{ entry.short_description }}</a></td>
                                     <td data-label="Date">{{ entry.date|date:"d b Y" }}</td>
+                                    <td data-label="Payee">{{ entry.payee|default:"" }}</td>
+                                    </td>
                                     <td data-label="Category">
-                                        {% if entry.category is not None %}
-                                            <span class="tag is-info">
-                                                <span class="icon">
-                                                    <i class="fas fa-hashtag"></i>
-                                                </span>
-                                                <span>{{ entry.category.name }}</span>
+                                        {% if entry.tags.all|length is not 0 %}
+                                            <span class="tags">
+                                                {% for tag in entry.tags.all %}
+                                                    <span class="tag is-info">
+                                                        <span class="icon">
+                                                            <i class="fas fa-tag"></i>
+                                                        </span>
+                                                        <span>{{ tag }}</span>
+                                                    </span>
+                                                {% endfor %}
                                             </span>
                                         {% endif %}
                                     </td>
                                     <td data-label="Budget">
-                                        {% if entry.budget is not None %}
-                                            <span class="tag is-info">
-                                                <span class="icon">
-                                                    <i class="fas fa-chart-pie"></i>
-                                                </span>
-                                                <span>{{ entry.budget.budget.name }}</span>
+                                        -
+                                    </td>
+                                    <td data-label="Transactions">
+                                        {% for transaction in entry.transactions.all %}
+                                            <span class="icon has-text-{% if transaction.amount > 0 %}success{% elif transaction.amount < 0 %}danger{% else %}grey{% endif %}">
+                                                <i class="fas fa-arrow-circle{% if transaction.amount > 0 %}-down{% elif transaction.amount < 0 %}-up{% endif %}"></i>
                                             </span>
-                                        {% endif %}
-                                    </td>
-                                    <td data-label="Source account">
-                                        {% if entry.source_accounts|length > 0 %}
-                                            {% for account in entry.source_accounts %}
-                                                <a href="{% url "blackbook:accounts_view" account.link_type account.slug %}">
-                                                    <span class="tag is-info">
-                                                        <span class="icon">
-                                                            <i class="fas {{ account.icon }}"></i>
-                                                        </span>
-                                                        <span>
-                                                            {{ account.type }} - {{ account.account }}
-                                                        </span>
-                                                    </span>
-                                                </a>
-                                            {% endfor %}
-                                        {% endif %}
-                                    </td>
-                                    <td data-label="Destination account">
-                                        {% if entry.destination_accounts|length > 0 %}
-                                            {% for account in entry.destination_accounts %}
-                                                <a href="{% url "blackbook:accounts_view" account.link_type account.slug %}">
-                                                    <span class="tag is-info">
-                                                        <span class="icon">
-                                                            <i class="fas {{ account.icon }}"></i>
-                                                        </span>
-                                                        <span>
-                                                            {{ account.type }} - {{ account.account }}
-                                                        </span>
-                                                    </span>
-                                                </a>
-                                            {% endfor %}
-                                        {% endif %}
+                                        {% endfor %}
                                     </td>
                                     <td>
                                         <div class="buttons is-right">
@@ -273,6 +233,55 @@
 
 {% block modals %}
     {% for entry in transaction_journals %}
+        <div id="modal-journal-entry-details-{{ entry.uuid }}" class="modal">
+            <div class="modal-background jb-modal-close"></div>
+            <div class="modal-card">
+                <header class="modal-card-head">
+                    <p class="modal-card-title">{{ entry.short_description }}{% if entry.payee is not None %} - {{ entry.payee }}{% endif %}</p>
+                    <button class="delete jb-modal-close" aria-label="close"></button>
+                </header>
+                <section class="modal-card-body">
+                    {% if entry.description %}
+                        <p>{{ entry.description }}</p>
+                    {% endif %}
+
+                    <div class="b-table">
+                        <div class="table-wrapper">
+                            <table class="table is-fullwidth is-striped is-hoverable is-fullwidth">
+                                <thead>
+                                    <tr>
+                                        <th><div class="th-wrap">Account</div></th>
+                                        <th><div class="th-wrap">Amount</div></th>
+                                        <th><div class="th-wrap">Currency</div></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for transaction in entry.transactions.all %}
+                                        <tr>
+                                            <td>
+                                                <span class="tag is-info">
+                                                    <span class="icon">
+                                                        <i class="fas {{ transaction.account.icon }}"></i>
+                                                    </span>
+                                                    <span>{{ transaction.account.accountstring }}</span>
+                                                </span>
+                                            </td>
+                                            <td>{{ transaction.amount|floatformat:"2" }}</td>
+                                            <td>{{ transaction.currency.code }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+                <footer class="modal-card-foot">
+                    <button class="button jb-modal-close">Close</button>
+                </footer>
+            </div>
+            <button class="modal-close is-large jb-modal-close" aria-label="close"></button>
+        </div>
+
         <div id="modal-journal-entry-delete-{{ entry.uuid }}" class="modal">
             <div class="modal-background jb-modal-close"></div>
             <div class="modal-card">
