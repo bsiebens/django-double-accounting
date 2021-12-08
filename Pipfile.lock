@@ -33,11 +33,11 @@
         },
         "django": {
             "hashes": [
-                "sha256:12220029292e1c7dce4ea0ad9189942d3204f98f07b6fcbfd0a64c3cc49c0f01",
-                "sha256:135d854f678d6692b4899cbe1b90dd905f60c8fafb13730ce0ac76d4a8c7e2e4"
+                "sha256:59304646ebc6a77b9b6a59adc67d51ecb03c5e3d63ed1f14c909cdfda84e8010",
+                "sha256:d5a8a14da819a8b9237ee4d8c78dfe056ff6e8a7511987be627192225113ee75"
             ],
             "index": "pypi",
-            "version": "==4.0b1"
+            "version": "==4.0"
         },
         "django-js-asset": {
             "hashes": [
@@ -211,11 +211,11 @@
         },
         "django": {
             "hashes": [
-                "sha256:12220029292e1c7dce4ea0ad9189942d3204f98f07b6fcbfd0a64c3cc49c0f01",
-                "sha256:135d854f678d6692b4899cbe1b90dd905f60c8fafb13730ce0ac76d4a8c7e2e4"
+                "sha256:59304646ebc6a77b9b6a59adc67d51ecb03c5e3d63ed1f14c909cdfda84e8010",
+                "sha256:d5a8a14da819a8b9237ee4d8c78dfe056ff6e8a7511987be627192225113ee75"
             ],
             "index": "pypi",
-            "version": "==4.0b1"
+            "version": "==4.0"
         },
         "django-debug-toolbar": {
             "hashes": [
