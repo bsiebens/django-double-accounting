@@ -7,6 +7,7 @@ from taggit.managers import TaggableManager
 
 from .account import Account
 from .currency import Currency, CurrencyConversion
+from .budget import Budget
 from .base import get_default_currency
 
 import uuid
@@ -18,6 +19,7 @@ class TransactionJournal(models.Model):
     payee = models.CharField(max_length=250, null=True, blank=True)
     short_description = models.CharField(max_length=250)
     description = models.TextField(blank=True, null=True)
+    budgets = models.ManyToManyField(Budget)
     uuid = models.UUIDField("UUID", default=uuid.uuid4, editable=False, db_index=True, unique=True)
     tags = TaggableManager(blank=True)
 

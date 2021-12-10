@@ -232,19 +232,11 @@
             <div class="card is-card-widget tile is-child">
                 <header class="card-header">
                     <p class="card-header-title">
-                        <span>Available</span>
-                        <span class="icon">
-                            <i class="fas fa-arrow-right"></i>
-                        </span>
-                        <span>XXX EUR
-                    </p>
-
-                    <p class="card-header-title">
                         <span>Used</span>
                         <span class="icon">
                             <i class="fas fa-arrow-right"></i>
                         </span>
-                        <span>XXX EUR
+                        <span>{{ data.budget.used|floatformat:"2" }} {{ data.budget.currency }}</span>
                     </p>
 
                     <a href="#" class="button is-small">
@@ -258,8 +250,8 @@
                         <div class="level-item">
                             <div class="is-widget-label">
                                 <h3 class="subtitle is-spaced">Budget available</h3>
-                                <h1 class="title has-text-{% if data.budget.available.amount > 0 %}success{% elif data.budget.available.amount < 0 %}danger{% else %}grey{% endif %}">
-                                    XXX EUR
+                                <h1 class="title has-text-{% if data.budget.available > 0 %}success{% elif data.budget.available < 0 %}danger{% else %}grey{% endif %}">
+                                    {{ data.budget.available|floatformat:"2" }} {{ data.budget.currency }}
                                 </h1>
                             </div>
                         </div>

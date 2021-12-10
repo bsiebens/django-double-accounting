@@ -1,6 +1,6 @@
 from datetime import timedelta, date
 
-from .models import Account
+from .models import CurrencyConversion
 
 import json
 
@@ -213,6 +213,13 @@ class TransactionChart(Chart):
                 for tag in transaction.journal_entry.tags.all():
                     series_name = "{name} - {currency}".format(name=tag, currency=transaction.currency.code)
                     amounts[series_name] = amounts.get(series_name, 0) + float(transaction.amount)
+
+            elif self.expenses_budget:
+                for budget in transaction.journal_entry.budgets.all():
+                    series_name = "{name} - {currency}".format(name=budget.name, currency=budget.currency.code)
+                    amounts[series_name] = amounts.get(series_name, 0) + float(
+                        CurrencyConversion.convert(base_currency=transaction.currency, target_currency=budget.currency, amount=transaction.amount)
+                    )
 
             else:
                 amounts[series_name] = amounts.get(series_name, 0) + float(transaction.amount)

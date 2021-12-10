@@ -1,12 +1,12 @@
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.urls import reverse
-from django.db.models import Q
+from django.db.models import Q, Prefetch
 from django.shortcuts import render
 
 from ..forms import TransactionFilterForm
 from ..charts import TransactionChart
-from ..models import get_default_value, TransactionJournal, Transaction
+from ..models import get_default_value, TransactionJournal, Transaction, Budget
 from ..utilities import calculate_period, set_message_and_redirect, set_message
 
 
@@ -40,21 +40,23 @@ def view(request):
 
     transaction_journals = (
         transaction_journals.filter(date__range=(period["start_date"], period["end_date"]))
-        .prefetch_related("transactions", "transactions__account", "transactions__currency", "tags")
+        .prefetch_related("transactions", "transactions__account", "transactions__currency", "tags", "budgets")
         .order_by("-date")
     )
     transactions = (
         Transaction.objects.filter(journal_entry__in=transaction_journals)
         .select_related("journal_entry", "account", "currency")
         .prefetch_related("journal_entry__tags")
+        .prefetch_related(Prefetch("journal_entry__budgets", queryset=Budget.objects.select_related("currency")))
     )
 
     charts = {
         "expense_payee_chart": TransactionChart(data=transactions, payee=True).generate_json(),
         "expense_payee_chart_count": transactions.filter(amount__lt=0).exclude(journal_entry__payee=None).count(),
-        "expense_budget_chart_count": 0,  # len([item for item in transactions if item.amount < 0 and item.journal_entry.budget is not None]),
+        "expense_budget_chart": TransactionChart(data=transactions, expenses_budget=True).generate_json(),
+        "expense_budget_chart_count": len([item for item in transactions if item.amount < 0 and item.journal_entry.budgets.count != 0]),
         "expense_tag_chart": TransactionChart(data=transactions, expenses_tag=True).generate_json(),
-        "expense_tag_chart_count": len([item for item in transactions.filter(amount__lt=0).all() if item.journal_entry.tags.count != 0]),
+        "expense_tag_chart_count": len([item for item in transactions if item.amount < 0 and item.journal_entry.tags.count != 0]),
     }
 
     return render(

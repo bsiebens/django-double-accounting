@@ -5,7 +5,7 @@ from django.db.models import Prefetch, Sum, Count
 from django.db.models.functions import Coalesce
 
 from ..charts import AccountChart
-from ..models import get_default_value, Transaction, TransactionJournal, Account
+from ..models import get_default_value, get_default_currency, Transaction, TransactionJournal, Account, CurrencyConversion, BudgetPeriod
 from ..utilities import display_period, calculate_period
 
 from decimal import Decimal
@@ -13,7 +13,11 @@ from decimal import Decimal
 
 @login_required
 def dashboard(request):
+    # TODO - Rewrite this page to use less queries on the model side as those scale with additional models
+    # Especially around transactions/amounts/budgets/conversions
+
     period = get_default_value(key="default_period", default_value="month", user=request.user)
+    currency = get_default_currency(user=request.user)
 
     net_worth_transactions = (
         Transaction.objects.filter(account__is_active=True, account__include_on_net_worth=True)
@@ -27,6 +31,8 @@ def dashboard(request):
     accounts = Account.objects.filter(is_active=True, include_on_net_worth=True, include_on_dashboard=True).prefetch_related("transactions")
     accounts = [account for account in accounts if account.is_leaf_node()]
 
+    budgets = BudgetPeriod.objects.filter(start_date__lte=timezone.localdate(), end_date__gte=timezone.localdate()).select_related("currency")
+
     data = {
         "totals": {
             "period": {"in": {}, "out": {}, "total": {}},
@@ -36,6 +42,7 @@ def dashboard(request):
             .annotate(total=Coalesce(Sum("amount"), Decimal(0))),
         },
         "period": display_period(periodicty=period, start_date=timezone.localdate()),
+        "budget": {"currency": currency, "used": Decimal(0), "available": Decimal(0)},
         "charts": {
             "account_chart": AccountChart(
                 data=net_worth_transactions.filter(account__include_on_dashboard=True),
@@ -89,5 +96,9 @@ def dashboard(request):
         data["totals"]["period"]["total"][transaction.currency.code] = (
             data["totals"]["period"]["total"].get(transaction.currency.code, 0) + transaction.amount
         )
+
+    for budget in budgets:
+        data["budget"]["used"] += CurrencyConversion.convert(base_currency=budget.currency, target_currency=currency, amount=budget.used)
+        data["budget"]["available"] += CurrencyConversion.convert(base_currency=budget.currency, target_currency=currency, amount=budget.available)
 
     return render(request, "blackbook/dashboard.html", {"data": data})

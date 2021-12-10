@@ -356,18 +356,29 @@
                                         {% if transaction.journal_entry.tags is not None %}
                                             <span class="tags">
                                                 {% for tag in transaction.journal_entry.tags.all %}
-                                                    <a href="#" class="tag is-info">    
+                                                    <span class="tag is-info">    
                                                         <span class="icon">
                                                             <i class="fas fa-tag"></i>
                                                         </span>
                                                         <span>{{ tag }}</span>
-                                                    </a>
+                                                    </span>
                                                 {% endfor %}
                                             </div>
                                         {% endif %}
                                     </td>
                                     <td data-label="Budget">
-                                        -
+                                        {% if transaction.journal_entry.budgets %}
+                                            <span class="tags">
+                                                {% for budget in transaction.journal_entry.budgets.all %}
+                                                    <a href="" class="tag is-info">
+                                                        <span class="icon">
+                                                            <i class="fas fa-chart-pie"></i>
+                                                        </span>
+                                                        <span>{{ budget.name }}</span>
+                                                    </a>
+                                                {% endfor %}
+                                            </span>
+                                        {% endif %}
                                     </td>
                                     {% if not account.is_leaf_node %}
                                         <td data-label="Account">

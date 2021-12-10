@@ -3,7 +3,7 @@ from django.utils import timezone, safestring
 
 from mptt.forms import TreeNodeChoiceField
 
-from .models import Currency, CurrencyConversion, Account
+from .models import Currency, CurrencyConversion, Account, Budget
 
 import re
 
@@ -63,6 +63,7 @@ class ProfileForm(forms.Form):
     last_name = forms.CharField()
     email = forms.EmailField()
     default_currency = forms.ModelChoiceField(queryset=Currency.objects.all(), blank=False)
+    default_period = forms.ChoiceField(choices=Budget.Period.choices)
 
 
 class AccountForm(forms.ModelForm):
@@ -87,3 +88,18 @@ class TransactionFilterForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super(TransactionFilterForm, self).__init__(*args, **kwargs)
+
+
+class TransactionJournalForm(forms.Form):
+    short_description = forms.CharField()
+    description = forms.CharField(required=False, widget=forms.Textarea)
+    date = forms.DateField(initial=timezone.now, widget=DateInput)
+    tags = forms.CharField(required=False, help_text="Split tags by spaces.")
+    add_new = forms.BooleanField(required=False, initial=False, help_text="After saving, display this form again to add a new transaction.")
+    display = forms.BooleanField(required=False, initial=True, help_text="After saving, display this form again to review this transaction.")
+
+
+class TransactionForm(forms.Form):
+    account = TreeNodeChoiceField(queryset=Account.objects.filter(is_active=True), empty_label=None, required=True)
+    amount = forms.DecimalField(max_digits=10, decimal_places=5)
+    currency = forms.ModelChoiceField(queryset=Currency.objects.order_by("code").all())

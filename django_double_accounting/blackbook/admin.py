@@ -18,7 +18,7 @@ class CurrencyConversionsInline(admin.TabularInline):
 
 @admin.register(models.Currency)
 class CurrencyAdmin(admin.ModelAdmin):
-    list_display = ["id", "code", "name"]
+    list_display = ["pk", "code", "name"]
     list_display_links = ["code"]
     search_fields = ["code", "name"]
     inlines = [CurrencyConversionsInline]
@@ -34,13 +34,13 @@ class UserProfileAdmin(admin.ModelAdmin):
 
     get_full_name.short_description = "Name"
 
-    list_display = ["id", "get_full_name", "user", "default_currency"]
+    list_display = ["pk", "get_full_name", "user", "default_currency", "default_period", "created", "modified"]
     list_display_links = ["get_full_name"]
     ordering = ["user"]
     search_fields = ["user__first_name", "user__last_name", "user__username"]
     raw_id_fields = ["user", "default_currency"]
     list_filter = ["default_currency"]
-    fieldsets = [["General information", {"fields": ["user", "default_currency", "created", "modified"]}]]
+    fieldsets = [["General information", {"fields": ["user", "default_currency", "default_period"]}]]
     readonly_fields = ["created", "modified"]
 
 
@@ -69,6 +69,7 @@ class AccountAdmin(MPTTModelAdmin):
     display_balances.short_description = "Balance"
 
     list_display = [
+        "pk",
         "name",
         "type",
         "display_iban",
@@ -81,6 +82,7 @@ class AccountAdmin(MPTTModelAdmin):
         "created",
         "modified",
     ]
+    list_display_links = ["name"]
     list_filter = ["type", "is_active", "include_on_net_worth", "include_on_dashboard", "currencies"]
     search_fields = ["name", "uuid", "iban"]
     fieldsets = [
@@ -104,13 +106,38 @@ class TransactionJournalAdmin(admin.ModelAdmin):
 
     show_tags.short_description = "Tags"
 
-    list_display = ["short_description", "payee", "date", "show_tags", "uuid", "created", "modified"]
+    list_display = ["pk", "short_description", "payee", "date", "show_tags", "uuid", "created", "modified"]
+    list_display_links = ["short_description"]
     list_filter = ["payee", TaggitListFilter]
     date_hierarchy = "date"
     search_fields = ["payee", "short_description", "description", "uuid"]
     fieldsets = [
         ["General information", {"fields": ["short_description", "payee", "date", "description", "tags"]}],
+        ["Budget", {"fields": ["budgets"]}],
         ["Options", {"fields": ["uuid"]}],
     ]
+    filter_horizontal = ["budgets"]
     readonly_fields = ["uuid"]
     inlines = [TransactionInline]
+
+
+class BudgetPeriodInline(admin.TabularInline):
+    model = models.BudgetPeriod
+    extra = 0
+    fields = ["start_date", "end_date", "amount", "currency", "available", "used", "created", "modified"]
+    readonly_fields = fields
+
+
+@admin.register(models.Budget)
+class BudgetAdmin(admin.ModelAdmin):
+    ordering = ["name"]
+    list_display = ["pk", "name", "is_active", "auto_budget", "period", "uuid", "created", "modified"]
+    list_filter = ["is_active", "auto_budget", "period"]
+    list_display_links = ["name"]
+    search_fields = ["name", "uuid"]
+    inlines = [BudgetPeriodInline]
+    readonly_fields = ["uuid"]
+    fieldsets = [
+        ["General information", {"fields": ["name", "is_active", "amount", "currency", "auto_budget", "period"]}],
+        ["Options", {"fields": ["uuid"]}],
+    ]

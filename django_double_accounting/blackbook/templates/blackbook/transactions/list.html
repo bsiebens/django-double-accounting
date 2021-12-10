@@ -196,7 +196,18 @@
                                         {% endif %}
                                     </td>
                                     <td data-label="Budget">
-                                        -
+                                        {% if entry.budgets %}
+                                            <span class="tags">
+                                                {% for budget in entry.budgets.all %}
+                                                    <a href="" class="tag is-info">
+                                                        <span class="icon">
+                                                            <i class="fas fa-chart-pie"></i>
+                                                        </span>
+                                                        <span>{{ budget.name }}</span>
+                                                    </a>
+                                                {% endfor %}
+                                            </span>
+                                        {% endif %}
                                     </td>
                                     <td data-label="Transactions">
                                         {% for transaction in entry.transactions.all %}

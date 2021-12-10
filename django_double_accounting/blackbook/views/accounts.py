@@ -27,7 +27,7 @@ def view(request, account_type=None, uuid=None):
             .filter(journal_entry__date__range=(period["start_date"], period["end_date"]))
             .select_related("journal_entry", "account", "currency")
             .prefetch_related(Prefetch("journal_entry__transactions", queryset=Transaction.objects.select_related("account")))
-            .prefetch_related("journal_entry__tags")
+            .prefetch_related("journal_entry__tags", "journal_entry__budgets")
             .order_by("-journal_entry__date")
         )
 
@@ -48,7 +48,8 @@ def view(request, account_type=None, uuid=None):
             ).generate_json(),
             "expense_payee_chart": TransactionChart(data=transactions, payee=True).generate_json(),
             "expense_payee_chart_count": len([item for item in transactions if item.amount < 0]),
-            "expense_budget_chart_count": 0,  # len([item for item in transactions if item.amount < 0 and item.journal_entry.budget is not None]),
+            "expense_budget_chart": TransactionChart(data=transactions, expenses_budget=True).generate_json(),
+            "expense_budget_chart_count": len([item for item in transactions if item.amount < 0 and item.journal_entry.budgets.count != 0]),
             "expense_tag_chart": TransactionChart(data=transactions, expenses_tag=True).generate_json(),
             "expense_tag_chart_count": len([item for item in transactions if item.amount < 0 and item.journal_entry.tags.count != 0]),
         }

@@ -16,6 +16,7 @@ def profile(request):
         "last_name": request.user.last_name,
         "email": request.user.email,
         "default_currency": get_default_currency(user=request.user, as_object=True),
+        "default_period": get_default_value(key="default_period", default_value="month", user=request.user),
     }
 
     profile_form = ProfileForm(initial=initial_data)
@@ -33,6 +34,7 @@ def profile(request):
                 request.user.save()
 
                 request.user.userprofile.default_currency = profile_form.cleaned_data["default_currency"]
+                request.user.userprofile.default_period = profile_form.cleaned_data["default_period"]
                 request.user.userprofile.save()
 
                 return set_message_and_redirect(request, "s|Your profile has been updated succesfully", reverse("blackbook:profile"))
