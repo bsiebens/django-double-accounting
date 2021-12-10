@@ -11,9 +11,12 @@ django-debug-toolbar = "*"
 [packages]
 django = "*"
 django-mptt = "*"
-graphene-django = "*"
 django-taggit = "*"
 django-taggit-helpers = "*"
+django-localflavor = "*"
+python-dateutil = "*"
+django-model-utils = "*"
+gunicorn = "*"
 
 [requires]
 python_version = "3.9"

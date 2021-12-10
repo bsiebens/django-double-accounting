@@ -27,21 +27,22 @@ SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "django-insecure-#z(71#rbb*0z=n
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
+INTERNAL_IPS = ["127.0.0.1"]
 
 # Application definition
 
 INSTALLED_APPS = [
-    "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.humanize",
     "mptt",
     "taggit",
     "taggit_helpers",
-    "graphene_django",
+    "blackbook.apps.BlackbookConfig",
+    "django.contrib.admin",
 ]
 
 if DEBUG:
@@ -58,7 +59,7 @@ MIDDLEWARE = [
 ]
 
 if DEBUG:
-    MIDDLEWARE.append("debug_toolbar.middleware.DebugToolbarMiddleware")
+    MIDDLEWARE.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware")
 
 ROOT_URLCONF = "django_double_accounting.urls"
 
@@ -136,3 +137,5 @@ STATIC_URL = "/static/"
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+GRAPHENE = {"SCHEMA": "blackbook.schema.schema"}

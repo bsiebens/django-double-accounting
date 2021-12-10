@@ -1,0 +1,481 @@
+{% extends 'blackbook/base.html' %}
+
+{% load iban %}
+{% load mptt_tags %}
+
+{% block titles %}
+    Account
+{% endblock titles %}
+
+{% block breadcrumbs %}
+    <li>Accounts</li>
+    <li>{{ account.get_type_display }}</li>
+{% endblock breadcrumbs %}
+
+{% block hero_section %}
+    <div class="hero-body">
+        <div class="level">
+            <div class="level-left">
+                <div class="level-item is-hero-avatar-item">
+                    <div class="image is-user-avatar">
+                        <img src="https://avatars.dicebear.com/api/identicon/{{ account.uuid }}.svg" style="width: 4rem; height: 4rem;">
+                    </div>
+                </div>
+                <div class="level-item is-hero-content-item">
+                    <div>
+                        <h1 class="title is-spaced">
+                            {{ account.name }}
+                        </h1>
+                        <h3 class="subtitle">
+                            <span class="tags">
+                                <span class="tag is-info">
+                                    <span class="icon">
+                                        <i class="fas {{ account.icon }}"></i>
+                                    </span>
+                                    <span>{{ account.accountstring }}</span>
+                                </span>
+
+                                <span class="tag is-info">
+                                    <span class="icon">
+                                        <i class="fas {{ account.icon }}"></i>
+                                    </span>
+                                    <span>{{ account.get_type_display }}</span>
+                                </span>
+                                
+                                {% if account.iban is not None %}
+                                    <span class="tag is-info">
+                                        <span class="icon">
+                                            <i class="fas {{ account.icon }}"></i>
+                                        </span>
+                                        <span>{{ account.iban|iban }}</span>
+                                    </span>
+                                {% endif %}
+                            
+                                {% for currency in account.balance %}
+                                    <span class="tag is-{% if currency.0 > 0 %}success{% elif currency.0 < 0 %}danger{% else %}light{% endif %}">
+                                        <span class="icon">
+                                            <i class="fas fa-coins"></i>
+                                        </span>
+                                        <span>{% if currency.0 > 0 %}+{% endif %}{{ currency.0 }} {{ currency.1 }}</span>
+                                    </span>
+                                {% endfor %}
+                            </span>
+                        </h3>
+                    </div>
+                </div>
+            </div>
+            <div class="level-right">
+                <div class="level-item">
+                    <a href="#" class="button is-light" title="Add transaction">
+                        Add transaction
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock hero_section %}
+
+{% block content %}
+    {% with transaction_count=account.transactions.count %}
+    <div class="card">
+        <header class="card-header">
+            <p class="card-header-title">
+                <span class="icon">
+                    <i class="fas fa-chart-line"></i>
+                </span>
+                <span>Account overview  - {{ period.start_date|date:"d b Y" }} until {{ period.end_date|date:"d b Y" }}</span>
+            </p>
+        </header>
+        <div class="card-content">
+            <div class="chart-area">
+                <div style="height: 100%;">
+                    <div class="chartjs-size-monitor">
+                        <div class="chartjs-size-monitor-expand">
+                            <div></div>
+                        </div>
+                        <div class="chartjs-size-monitor-shrink">
+                            <div></div>
+                        </div>
+                    </div>
+                    <canvas id="account-line-chart" width="2992" height="1000" class="chartjs-render-monitor" style="display: block; height: 250px; width: 1197px;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tile is-ancestor">
+        <div class="tile is-parent">
+            <div class="card is-card-widget tile is-child">
+                <header class="card-header">
+                    <p class="card-header-title">
+                        <span class="icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </span>
+                        <span>Current period ({{ transaction_count }} transaction{{ transaction_count|pluralize }})</span>
+                    </p>
+                </header>
+                <div class="card-content">
+                    <div class="level is-mobile">
+                        <div class="level-item">
+                            <div class="is-widget-label">
+                                <h3 class="subtitle is-spaced">Income</h3>
+                                {% if period_data.in %}
+                                    <h1 class="title has-text-success">
+                                        {% for currency, amount in period_data.in.items %}
+                                            +{{ amount|floatformat:"2" }} {{ currency }} {% if not forloop.last %} / {% endif %}
+                                        {% endfor %}
+                                    </h1>  
+                                {% else %}
+                                    <h1 class="title has-text-grey">No income</h1>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="level-item has-widget-icon">
+                            <div class="is-widget-icon">
+                                <span class="icon has-text-{% if period_data.in %}success{% else %}grey{% endif %} is-large"><i class="fas fa-arrow-down fa-3x"></i></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="tile is-parent">
+            <div class="card is-card-widget tile is-child">
+                <header class="card-header">
+                    <p class="card-header-title">
+                        <span class="icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </span>
+                        <span>Current period ({{ transaction_count }} transaction{{ transaction_count|pluralize }})</span>
+                    </p>
+                </header>
+                <div class="card-content">
+                    <div class="level is-mobile">
+                        <div class="level-item">
+                            <div class="is-widget-label">
+                                <h3 class="subtitle is-spaced">Expenses</h3>
+                                {% if period_data.out %}
+                                    <h1 class="title has-text-danger">
+                                        {% for currency, amount in period_data.out.items %}
+                                            {{ amount|floatformat:"2" }} {{ currency }} {% if not forloop.last %}<br />{% endif %}
+                                        {% endfor %}
+                                    </h1>                              
+                                {% else %}
+                                    <h1 class="title has-text-grey">No expenses</h1>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="level-item has-widget-icon">
+                            <div class="is-widget-icon">
+                                <span class="icon has-text-{% if period_data.out %}danger{% else %}grey{% endif %} is-large"><i class="fas fa-arrow-up fa-3x"></i></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="tile is-parent">
+            <div class="card is-card-widget tile is-child">
+                <header class="card-header">
+                    <p class="card-header-title">
+                        <span class="icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </span>
+                        <span>Current period</span>
+                    </p>
+                </header>
+                <div class="card-content">
+                    <div class="level is-mobile">
+                        <div class="level-item">
+                            <div class="is-widget-label">
+                                <h3 class="subtitle is-spaced">Balance</h3>
+                                <h1 class="title has-text-{% if balance_for_period.amount > 0 %}success{% elif balance_for_period.amount < 0 %}danger{% else %}grey{% endif %}">
+                                    {% for currency, amount in period_data.balance.items %}
+                                        <span class="has-text-{% if amount > 0 %}success{% else %}danger{% endif %}">{% if amount > 0 %}+{% endif %}{{ amount|floatformat:"2" }} {{ currency }}</span>{% if not forloop.last %}<br />{% endif %}
+                                    {% endfor %}
+                                </h1>
+                            </div>
+                        </div>
+                        <div class="level-item has-widget-icon">
+                            <div class="is-widget-icon">
+                                <span class="icon has-text-{% if balance_for_period.amount > 0 %}success{% elif balance_for_period.amount < 0 %}danger{% else %}grey{% endif %} is-large"><i class="fas fa-coins fa-3x"></i></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tile is-ancestor">
+        <div class="tile is-parent">
+            <div class="card is-card-widget tile is-child">
+                <header class="card-header">
+                    <p class="card-header-title">
+                        <span class="icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </span>
+                        <span>Current period - expenses by payee</span>
+                    </p>
+                </header>
+                <div class="card-content">
+                    {% if charts.expense_payee_chart_count == 0 %}
+                        <h3 class="subtitle is-spaced has-text-centered">No transaction information available yet.</h3>
+                    {% else %}
+                        <div class="chart-area">
+                            <div style="height: 100%;">
+                                <div class="chartjs-size-monitor">
+                                    <div class="chartjs-size-monitor-expand">
+                                        <div></div>
+                                    </div>
+                                    <div class="chartjs-size-monitor-shrink">
+                                        <div></div>
+                                    </div>
+                                </div>
+                                <canvas id="transaction-expense-payee-chart" width="2992" height="1000" class="chartjs-render-monitor" style="display: block; height: 250px; width: 250px;"></canvas>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="tile is-parent">
+            <div class="card is-card-widget tile is-child">
+                <header class="card-header">
+                    <p class="card-header-title">
+                        <span class="icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </span>
+                        <span>Current period - expenses by tag</span>
+                    </p>
+                </header>
+                <div class="card-content">
+                    {% if charts.expense_tag_chart_count == 0 %}
+                        <h3 class="subtitle is-spaced has-text-centered">No transaction information available yet.</h3>
+                    {% else %}
+                        <div class="chart-area">
+                            <div style="height: 100%;">
+                                <div class="chartjs-size-monitor">
+                                    <div class="chartjs-size-monitor-expand">
+                                        <div></div>
+                                    </div>
+                                    <div class="chartjs-size-monitor-shrink">
+                                        <div></div>
+                                    </div>
+                                </div>
+                                <canvas id="transaction-expense-tag-chart" width="2992" height="1000" class="chartjs-render-monitor" style="display: block; height: 250px; width: 250px;"></canvas>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="tile is-parent">
+            <div class="card is-card-widget tile is-child">
+                <header class="card-header">
+                    <p class="card-header-title">
+                        <span class="icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </span>
+                        <span>Current period - expenses by budget</span>
+                    </p>
+                </header>
+                <div class="card-content">
+                    {% if charts.expense_budget_chart_count == 0 %}
+                        <h3 class="subtitle is-spaced has-text-centered">No transaction information available yet.</h3>
+                    {% else %}
+                        <div class="chart-area">
+                            <div style="height: 100%;">
+                                <div class="chartjs-size-monitor">
+                                    <div class="chartjs-size-monitor-expand">
+                                        <div></div>
+                                    </div>
+                                    <div class="chartjs-size-monitor-shrink">
+                                        <div></div>
+                                    </div>
+                                </div>
+                                <canvas id="transaction-expense-budget-chart" width="2992" height="1000" class="chartjs-render-monitor" style="display: block; height: 250px; width: 250px;"></canvas>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <p class="card-header-title">
+                <span class="icon">
+                    <i class="fas fa-exchange-alt"></i>
+                </span>
+                <span>Transactions  - {{ period.start_date|date:"d b Y" }} until {{ period.end_date|date:"d b Y" }}</span>
+            </p>
+        </div>
+        <div class="card-content">
+            <div class="b-table">
+                <div class="table-wrapper has-mobile-cards">
+                    <table class="table is-fullwidth is-striped is-hoverable is-fullwidth">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th><div class="th-wrap">Transaction</div></th>
+                                <th><div class="th-wrap">Payee</div></th>
+                                <th><div class="th-wrap">Amount</div></th>
+                                <th><div class="th-wrap">Date</div></th>
+                                <th><div class="th-wrap">Tags</div></th>
+                                <th><div class="th-wrap">Budget</div></th>
+                                {% if not account.is_leaf_node %}
+                                    <th><div class="th-wrap">Account</div></th>
+                                {% endif %}
+                                <th><div class="th-wrap">Related accounts</div></th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in transactions %}
+                                <tr>
+                                    <td>
+                                        {{ forloop.counter }}
+                                        </span>
+                                        {% if transaction.reconciled %}
+                                            <span class="icon">
+                                                <i class="fas fa-check"></i>
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td data-label="Transaction">{{ transaction.journal_entry.short_description }}</td>
+                                    <td data-label="Payee">{{ transaction.journal_entry.payee|default:"" }}</td>
+                                    <td data-label="Amount">
+                                        <span class="has-text-{% if transaction.amount < 0 %}danger{% else %}success{% endif %}">
+                                            {% if not transaction.amount < 0 %}+{% endif %}{{ transaction.amount|floatformat:"2" }} {{ transaction.currency.code }}
+                                        </span>
+                                    </td>
+                                    <td data-label="Date">{{ transaction.journal_entry.date|date:"d b Y" }}</td>
+                                    <td data-label="Category">
+                                        {% if transaction.journal_entry.tags is not None %}
+                                            <span class="tags">
+                                                {% for tag in transaction.journal_entry.tags.all %}
+                                                    <span class="tag is-info">    
+                                                        <span class="icon">
+                                                            <i class="fas fa-tag"></i>
+                                                        </span>
+                                                        <span>{{ tag }}</span>
+                                                    </span>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </td>
+                                    <td data-label="Budget">
+                                        {% if transaction.journal_entry.budgets %}
+                                            <span class="tags">
+                                                {% for budget in transaction.journal_entry.budgets.all %}
+                                                    <a href="" class="tag is-info">
+                                                        <span class="icon">
+                                                            <i class="fas fa-chart-pie"></i>
+                                                        </span>
+                                                        <span>{{ budget.name }}</span>
+                                                    </a>
+                                                {% endfor %}
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    {% if not account.is_leaf_node %}
+                                        <td data-label="Account">
+                                            <a href="{% url "blackbook:accounts_view" transaction.account.type transaction.account.uuid %}" class="tag is-info">
+                                                <span class="icon">
+                                                    <i class="fas {{ transaction.account.icon }}"></i>
+                                                </span>
+                                                <span>{{ transaction.account.accountstring }}</span>
+                                            </a>
+                                        </td>
+                                    {% endif %}
+                                    <td data-label="Related accounts">
+                                        {% if transaction.journal_entry.transactions.count > 1 %}
+                                            <span class="tags">
+                                                {% for transaction_object in transaction.journal_entry.transactions.all %}
+                                                    {% if transaction_object != transaction %}
+                                                        <a href="{% url "blackbook:accounts_view" transaction_object.account.type transaction_object.account.uuid %}" class="tag is-info">
+                                                            <span class="icon">
+                                                                <i class="fas {{ transaction_object.account.icon }}"></i>
+                                                            </span>
+                                                            <span>{{ transaction_object.account.accountstring }}</span>
+                                                        </a>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="buttons is-right">
+                                            {% if transaction.journal.type != "start" %}
+                                                <a class="button is-primary is-small" href="#" type="button">
+                                                    <span class="icon">
+                                                        <i class="fas fa-edit"></i>
+                                                    </span>
+                                                </a>
+                                                <a class="button is-danger is-small jb-modal" data-target="modal-transaction-delete-{{ transaction.journal.uuid }}" type="button">
+                                                    <span class="icon">
+                                                        <i class="fas fa-trash-alt"></i>
+                                                    </span>
+                                                </a>
+                                            {% endif %}
+                                        </div>                    
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endwith %}
+{% endblock content %}
+
+{% block modals %}
+    {% for transaction in transactions %}
+        <div id="modal-transaction-delete-{{ transaction.journal.uuid }}" class="modal">
+            <div class="modal-background jb-modal-close"></div>
+            <div class="modal-card">
+                <header class="modal-card-head">
+                    <p class="modal-card-title">Confirm action</p>
+                    <button class="delete jb-modal-close" aria-label="close"></button>
+                </header>
+                <section class="modal-card-body">
+                    <p>This will permanently delete transaction <b>{{ transaction.journal.short_description }}</b>.</p>
+                    <p>Are you sure?</p>
+                </section>
+                <footer class="modal-card-foot">
+                    <button class="button jb-modal-close">Cancel</button>
+                    <form method="post" action="#">
+                        {% csrf_token %}
+                        <input type="hidden" name="transaction_uuid" value="{{ transaction.journal.uuid }}">
+                        <button class="button is-danger" type="submit">Delete</button>
+                    </form>
+                </footer>
+            </div>
+            <button class="modal-close is-large jb-modal-close" aria-label="close"></button>
+        </div>
+    {% endfor %}
+{% endblock modals %}
+
+{% block javascript %}
+    let accountChartLineCTX = document.getElementById("account-line-chart").getContext("2d");
+    new Chart(accountChartLineCTX, {{ charts.account_chart|safe }});
+
+    {% if charts.expense_payee_chart_count != 0 %}
+        let transactionPayeeChartCTX = document.getElementById("transaction-expense-payee-chart").getContext("2d");
+        new Chart(transactionPayeeChartCTX, {{ charts.expense_payee_chart|safe }});
+    {% endif %}
+
+    {% if charts.expense_tag_chart_count != 0%}   
+        let expenseTagChartCTX = document.getElementById("transaction-expense-tag-chart").getContext("2d");
+        new Chart(expenseTagChartCTX, {{ charts.expense_tag_chart|safe }});
+    {% endif %}
+
+    {% if charts.expense_budget_chart_count != 0 %}
+        let expenseBudgetChartCTX = document.getElementById("transaction-expense-budget-chart").getContext("2d");
+        new Chart(expenseBudgetChartCTX, {{ charts.expense_budget_chart|safe }});
+    {% endif %}
+{% endblock javascript %}
