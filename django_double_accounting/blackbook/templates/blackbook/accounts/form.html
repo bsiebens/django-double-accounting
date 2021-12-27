@@ -125,7 +125,7 @@
                                 <div class="control is-clearfix">
                                     {% if account.pk is not None and account.balance %}
                                         {% for currency in account.balance %}
-                                            <input type="text" readonly value="{{ currency.0 }} {{ currency.1 }}" class="input is-static">
+                                            <input type="text" readonly value="{{ currency.0|floatformat:"2" }} {{ currency.1 }}" class="input is-static">
                                         {% endfor %}
                                     {% else %}
                                         <input type="text" readonly value="-" class="input is-static">

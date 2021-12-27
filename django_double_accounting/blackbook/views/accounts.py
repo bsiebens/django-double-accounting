@@ -94,7 +94,7 @@ def add_edit(request, uuid=None):
 
         return set_message_and_redirect(
             request,
-            "s|Account {account.name} ({account.accountstring}) was created succesfully".format(account=account),
+            "s|Account {account.name} ({account.accountstring}) was saved succesfully".format(account=account),
             reverse("blackbook:dashboard"),
         )
 

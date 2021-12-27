@@ -74,6 +74,7 @@ class Account(MPTTModel):
             "expenses": "fa-file-invoice-dollar",
             "liabilities": "fa-home",
             "cash": "fa-coins",
+            "equity": "fa-coins",
         }
 
         self.clean()

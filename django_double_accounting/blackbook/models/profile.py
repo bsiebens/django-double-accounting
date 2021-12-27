@@ -8,7 +8,7 @@ from .base import get_default_currency
 
 class UserProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    default_currency = models.ForeignKey(Currency, on_delete=models.SET_NULL, null=True, default=get_default_currency(as_object=True).id)
+    default_currency = models.ForeignKey(Currency, on_delete=models.SET_NULL, null=True)
     default_period = models.CharField(max_length=30, choices=Budget.Period.choices, default=Budget.Period.MONTH)
 
     created = models.DateTimeField(auto_now_add=True)

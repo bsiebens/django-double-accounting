@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.db.utils import OperationalError
 
 
 def get_default_value(key, default_value=None, user=None):
@@ -22,6 +23,8 @@ def get_default_currency(user=None, as_object=False):
             return Currency.objects.get(code=default_currency)
         except Currency.DoesNotExist:
             return Currency()
+        except OperationalError:
+            return None
 
     else:
-        return default_currency
+        return None

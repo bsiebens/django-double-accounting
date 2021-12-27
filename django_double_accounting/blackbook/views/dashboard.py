@@ -73,14 +73,22 @@ def dashboard(request):
         .values("payee")
         .annotate(Count("pk"))
         .order_by("-pk__count")
-        .first()["payee"],
+        .first()["payee"]
+        if TransactionJournal.objects.exclude(payee=None)
+        .filter(date__range=calculate_period(periodicity=period, start_date=timezone.localdate(), as_tuple=True))
+        .values("payee")
+        .annotate(Count("pk"))
+        .order_by("-pk__count")
+        .count()
+        >= 1
+        else None,
         "highest_amount": Transaction.objects.filter(
             journal_entry__date__range=calculate_period(periodicity=period, start_date=timezone.localdate(), as_tuple=True)
         )
         .order_by("-amount")
         .select_related("currency")
         .first(),
-        "most_used_tag": TransactionJournal.tags.most_common()[0],
+        "most_used_tag": TransactionJournal.tags.most_common()[0] if len(TransactionJournal.tags.most_common()) >= 1 else None,
     }
 
     for transaction in net_worth_transactions:

@@ -19,7 +19,7 @@ class TransactionJournal(models.Model):
     payee = models.CharField(max_length=250, null=True, blank=True)
     short_description = models.CharField(max_length=250)
     description = models.TextField(blank=True, null=True)
-    budgets = models.ManyToManyField(Budget)
+    budgets = models.ManyToManyField(Budget, blank=True)
     uuid = models.UUIDField("UUID", default=uuid.uuid4, editable=False, db_index=True, unique=True)
     tags = TaggableManager(blank=True)
 

@@ -15,8 +15,8 @@ def profile(request):
         "first_name": request.user.first_name,
         "last_name": request.user.last_name,
         "email": request.user.email,
-        "default_currency": get_default_currency(user=request.user, as_object=True),
-        "default_period": get_default_value(key="default_period", default_value="month", user=request.user),
+        "default_currency": request.user.userprofile.default_currency,
+        "default_period": request.user.userprofile.default_period,
     }
 
     profile_form = ProfileForm(initial=initial_data)
