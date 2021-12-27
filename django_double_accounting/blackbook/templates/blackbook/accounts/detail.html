@@ -38,7 +38,7 @@
                                 {% if account.iban is not None %}
                                     <span class="tag is-info">
                                         <span class="icon">
-                                            <i class="fas {{ account.icon }}"></i>
+                                            <i class="fas {{ account.icon }}"></i>
                                         </span>
                                         <span>{{ account.iban|iban }}</span>
                                     </span>
@@ -49,7 +49,7 @@
                                         <span class="icon">
                                             <i class="fas fa-coins"></i>
                                         </span>
-                                        <span>{% if currency.0 > 0 %}+{% endif %}{{ currency.0|localize|floatformat:"2" }} {{ currency.1 }}</span>
+                                        <span>{% if currency.0 > 0 %}+{% endif %}{{ currency.0|floatformat:"2" }} {{ currency.1 }}</span>
                                     </span>
                                 {% endfor %}
                             </span>
@@ -340,9 +340,7 @@
                                     <td data-label="Transaction">{{ transaction.journal_entry.short_description }}</td>
                                     <td data-label="Payee">{{ transaction.journal_entry.payee|default:"" }}</td>
                                     <td data-label="Amount">
-                                        <span class="has-text-{% if transaction.amount < 0 %}danger{% else %}success{% endif %}">
-                                            {% if not transaction.amount < 0 %}+{% endif %}{{ transaction.amount|floatformat:"2" }} {{ transaction.currency.code }}
-                                        </span>
+                                        {% if not transaction.amount < 0 %}+{% endif %}{{ transaction.amount|floatformat:"2" }} {{ transaction.currency.code }}
                                     </td>
                                     <td data-label="Date">{{ transaction.journal_entry.date|date:"d b Y" }}</td>
                                     <td data-label="Category">
