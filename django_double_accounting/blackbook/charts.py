@@ -69,10 +69,11 @@ class Chart:
 
 
 class AccountChart(Chart):
-    def __init__(self, data, accounts, start_date, end_date, *args, **kwargs):
+    def __init__(self, data, accounts, start_date, end_date, dashboard_only=False, *args, **kwargs):
         self.start_date = start_date
         self.end_date = end_date
         self.accounts = accounts
+        self.dashboard_only = dashboard_only
 
         super().__init__(data=data, *args, **kwargs)
 
@@ -99,6 +100,9 @@ class AccountChart(Chart):
         data = {"type": "line", "data": {"labels": [date.strftime("%d %b %Y") for date in dates], "datasets": []}}
 
         accounts = {}
+
+        if self.dashboard_only:
+            self.data = [item for item in self.data if item.account.include_on_dashboard]
 
         for item in self.data:
             account_key = "{account} - {currency}".format(account=item.account.accountstring, currency=item.currency)

@@ -42,8 +42,8 @@ class CurrencyConversion(models.Model):
         conversion_object = None
         multiplier = 1
 
-        base_currency = base_currency.upper() if type(base_currency) == str else base_currency
-        target_currency = target_currency.upper() if type(target_currency) == str else target_currency
+        base_currency = base_currency.upper() if type(base_currency) == str else str(base_currency)
+        target_currency = target_currency.upper() if type(target_currency) == str else str(target_currency)
 
         if base_currency == target_currency:
             return amount

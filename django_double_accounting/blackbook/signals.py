@@ -39,7 +39,7 @@ def create_budget_period(sender, instance, created, **kwargs):
                 old_amount = instance.tracker.previous("amount")
 
             if current_period.start_date == period["start_date"] and current_period.end_date == period["end_date"]:
-                if instance.tracker.has_changeed("amount"):
+                if instance.tracker.has_changed("amount"):
                     current_period.amount = (current_period.amount - old_amount) + instance.amount
                     current_period.save(update_fields=["amount"])
 
